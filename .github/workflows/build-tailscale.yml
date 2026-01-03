@@ -1,0 +1,236 @@
+name: Build Small Tailscale
+
+on:
+  repository_dispatch:
+    types: [upstream_release]
+  workflow_dispatch:
+    inputs:
+      force_version:
+        description: 'Build specific version (e.g. v1.50.0). Leave empty for auto-detect.'
+        required: false
+        default: ''
+      skip_check:
+        description: 'Skip version check and force build?'
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - name: Check version
+        id: check
+        run: |
+          # 手動入力がある場合はそれを優先
+          INPUT_VER="${{ inputs.force_version }}"
+          SKIP_CHECK="${{ inputs.skip_check }}"
+          
+          # 公式の最新タグを取得
+          LATEST_TAG=$(curl -s https://api.github.com/repos/tailscale/tailscale/releases/latest | jq -r .tag_name)
+          
+          # 自分のリポジトリの最新リリースを取得
+          MY_LATEST=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r .tag_name || echo "v0.0.0")
+
+          echo "Upstream: $LATEST_TAG"
+          echo "Current: $MY_LATEST"
+          echo "Input: $INPUT_VER"
+
+          if [ -n "$INPUT_VER" ]; then
+            echo "Manual version specified."
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "version=$INPUT_VER" >> $GITHUB_OUTPUT
+          elif [ "$SKIP_CHECK" == "true" ]; then
+             echo "Skipping check, forcing build of $LATEST_TAG"
+             echo "should_run=true" >> $GITHUB_OUTPUT
+             echo "version=$LATEST_TAG" >> $GITHUB_OUTPUT
+          elif [ "$LATEST_TAG" != "$MY_LATEST" ] || [ "${{ github.event_name }}" == "repository_dispatch" ]; then
+            echo "New version detected."
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "version=$LATEST_TAG" >> $GITHUB_OUTPUT
+          else
+            echo "Already up to date."
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    needs: check-version
+    if: needs.check-version.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # - goarch: amd64
+          #   openwrt_arch: x86_64
+          - goarch: arm64
+            openwrt_arch: aarch64_generic
+          # - goarch: arm
+          #   goarm: 7
+          #   openwrt_arch: arm_cortex-a9
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+        with:
+          path: my-repo
+
+      - name: Checkout Tailscale
+        uses: actions/checkout@v4
+        with:
+          repository: tailscale/tailscale
+          ref: ${{ needs.check-version.outputs.version }}
+          path: tailscale-src
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Install UPX and build tools
+        run: sudo apt-get install -y upx-ucl fakeroot
+
+      - name: Build Small Tailscale
+        working-directory: tailscale-src
+        env:
+          GOOS: linux
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          TAGS="ts_omit_aws,ts_omit_bird,ts_omit_tap,ts_omit_kube,ts_omit_wifi,ts_omit_uiserver"
+          LDFLAGS="-s -w"
+          go build -tags "$TAGS" -ldflags "$LDFLAGS" -o ../tailscaled ./cmd/tailscaled
+          go build -tags "$TAGS" -ldflags "$LDFLAGS" -o ../tailscale ./cmd/tailscale
+
+      - name: Compress binaries with UPX
+        run: |
+          upx --best --lzma tailscaled
+          upx --best --lzma tailscale
+
+      - name: Package into IPK
+        run: |
+          VERSION=${{ needs.check-version.outputs.version }}
+          VERSION_NUM=${VERSION#v}
+          ARCH=${{ matrix.openwrt_arch }}
+          
+          mkdir -p ipk_build/usr/sbin
+          mkdir -p ipk_build/etc/init.d
+          cp tailscaled ipk_build/usr/sbin/
+          cp tailscale ipk_build/usr/sbin/
+          cp my-repo/openwrt/tailscale.init ipk_build/etc/init.d/tailscale
+          chmod +x ipk_build/etc/init.d/tailscale
+          
+          mkdir -p ipk_control
+          cp my-repo/openwrt/control ipk_control/control
+          sed -i "s/VERSION_PLACEHOLDER/$VERSION_NUM/g" ipk_control/control
+          sed -i "s/ARCH_PLACEHOLDER/$ARCH/g" ipk_control/control
+          
+          INSTALLED_SIZE=$(du -s ipk_build | cut -f1)
+          echo "Installed-Size: $INSTALLED_SIZE" >> ipk_control/control
+
+          cd ipk_build
+          tar --owner=0 --group=0 -czf ../data.tar.gz .
+          cd ../ipk_control
+          tar --owner=0 --group=0 -czf ../control.tar.gz .
+          cd ..
+          
+          echo "2.0" > debian-binary
+          ar r tailscale_${VERSION_NUM}_${ARCH}.ipk debian-binary control.tar.gz data.tar.gz
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tailscale_${{ matrix.openwrt_arch }}
+          path: "*.ipk"
+
+  release:
+    needs: [check-version, build]
+    if: needs.check-version.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.check-version.outputs.version }}
+          name: Small Tailscale ${{ needs.check-version.outputs.version }}
+          body: |
+            Auto-generated small build for OpenWrt.
+            Upstream: https://github.com/tailscale/tailscale/releases/tag/${{ needs.check-version.outputs.version }}
+            
+            **Build Tags:** `ts_omit_aws, ts_omit_bird, ts_omit_tap, ts_omit_kube, ts_omit_wifi, ts_omit_uiserver`
+            **Compression:** UPX --best --lzma
+          files: artifacts/*.ipk
+          prerelease: true # テスト中はプレリリース
+
+  deploy-repo:
+    needs: [check-version, build]
+    if: needs.check-version.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: repo-page
+        continue-on-error: true # 初回はブランチがないためエラー許容
+
+      - name: Initialize Repo Directory
+        run: |
+          if [ ! -d "repo-page" ]; then
+            mkdir repo-page
+            cd repo-page
+            git init
+            git checkout -b gh-pages
+            cd ..
+          fi
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate Index
+        run: |
+          cd repo-page
+          for ARCH_DIR in ../artifacts/*; do
+            ARCH_NAME=$(basename "$ARCH_DIR" | sed 's/tailscale_//')
+            mkdir -p "$ARCH_NAME"
+            rm -f "$ARCH_NAME"/*.ipk
+            cp "$ARCH_DIR"/*.ipk "$ARCH_NAME"/
+            cd "$ARCH_NAME"
+            echo "" > Packages
+            for IPK in *.ipk; do
+              ar p "$IPK" control.tar.gz | tar xzO ./control >> Packages
+              echo "Filename: $IPK" >> Packages
+              echo "Size: $(stat -c%s "$IPK")" >> Packages
+              echo "SHA256sum: $(sha256sum "$IPK" | cut -d' ' -f1)" >> Packages
+              echo "" >> Packages
+            done
+            gzip -k -f Packages
+            cd ..
+          done
+
+      - name: Deploy to GitHub Pages
+        working-directory: repo-page
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+
+          # 変更がない場合のエラー回避
+          git commit -m "Update repo ${{ needs.check-version.outputs.version }}" || echo "No changes to commit"
+
+          # 強制プッシュで履歴を上書きしないとリポジトリが肥大化するため注意
+          # 容量節約なら --force 推奨
+          git push origin gh-pages
