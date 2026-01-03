@@ -73,7 +73,7 @@ jobs:
             openwrt_arch: x86_64
 
           # --- ARM64 (Raspberry Pi 4, NanoPi, etc.) ---
-          # "generic" covers cortex-a53, a72, a76, etc.
+          # "generic" covers cortex-a53, a72, a76
           - goarch: arm64
             openwrt_arch: aarch64_generic
 
@@ -88,7 +88,8 @@ jobs:
             goarm: 6
             openwrt_arch: arm_arm1176jzf-s_vfp
 
-          # --- ARMv5 (arm926ej-s, xscale) ---
+          # --- ARMv5 ---
+          # "arm926ej-s" covers xscale
           - goarch: arm
             goarm: 5
             openwrt_arch: arm_arm926ej-s
