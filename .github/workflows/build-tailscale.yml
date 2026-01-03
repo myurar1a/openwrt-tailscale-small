@@ -66,13 +66,63 @@ jobs:
     strategy:
       matrix:
         include:
-          # - goarch: amd64
-          #   openwrt_arch: x86_64
+          # --- x86 / x86_64 (PC / Server) ---
+          - goarch: 386
+            openwrt_arch: i386_pentium4
+          - goarch: amd64
+            openwrt_arch: x86_64
+
+          # --- ARM64 (Raspberry Pi 4, NanoPi, etc.) ---
+          # "generic" covers cortex-a53, a72, a76, etc.
           - goarch: arm64
             openwrt_arch: aarch64_generic
-          # - goarch: arm
-          #   goarm: 7
-          #   openwrt_arch: arm_cortex-a9
+
+          # --- ARMv7 (Raspberry Pi 2/3, etc.) ---
+          # "arm_cortex-a9" covers cortex-a5, a7, a8, a15 (neon/vfpv3/vfpv4)
+          - goarch: arm
+            goarm: 7
+            openwrt_arch: arm_cortex-a9
+
+          # --- ARMv6 (Raspberry Pi 1 / Zero) ---
+          - goarch: arm
+            goarm: 6
+            openwrt_arch: arm_arm1176jzf-s_vfp
+
+          # --- ARMv5 (arm926ej-s, xscale) ---
+          - goarch: arm
+            goarm: 5
+            openwrt_arch: arm_arm926ej-s
+
+          # --- MIPS Big Endian (Atheros AR7xxx/AR9xxx, QCA9xxx) ---
+          - goarch: mips
+            gomips: softfloat
+            openwrt_arch: mips_24kc
+
+          # --- MIPS Little Endian (MediaTek MT76x8, Omega2, etc.) ---
+          - goarch: mipsle
+            gomips: softfloat
+            openwrt_arch: mipsel_24kc
+
+          # --- MIPS64 Big Endian ---
+          - goarch: mips64
+            openwrt_arch: mips64_mips64r2
+
+          # --- MIPS64 Little Endian ---
+          - goarch: mips64le
+            openwrt_arch: mips64el_mips64r2
+
+          # --- RISC-V ---
+          - goarch: riscv64
+            openwrt_arch: riscv64_riscv64
+
+          # --- LoongArch ---
+          - goarch: loong64
+            openwrt_arch: loongarch64_generic
+
+          # --- PowerPC64 ---
+          - goarch: ppc64
+            openwrt_arch: powerpc64_e5500
+
     steps:
       - name: Checkout this repo
         uses: actions/checkout@v4
@@ -99,10 +149,13 @@ jobs:
         env:
           GOOS: linux
           GOARCH: ${{ matrix.goarch }}
+          GOARM: ${{ matrix.goarm }}
+          GOMIPS: ${{ matrix.gomips }}
           CGO_ENABLED: 0
         run: |
           TAGS="ts_omit_aws,ts_omit_bird,ts_omit_tap,ts_omit_kube,ts_omit_wifi,ts_omit_uiserver"
           LDFLAGS="-s -w"
+          echo "Building for $GOARCH (OpenWrt: ${{ matrix.openwrt_arch }})..."
           go build -tags "$TAGS" -ldflags "$LDFLAGS" -o ../tailscaled ./cmd/tailscaled
           go build -tags "$TAGS" -ldflags "$LDFLAGS" -o ../tailscale ./cmd/tailscale
 
@@ -236,4 +289,4 @@ jobs:
 
           # 強制プッシュで履歴を上書きしないとリポジトリが肥大化するため注意
           # 容量節約なら --force 推奨
-          git push origin gh-pages
+          git push origin HEAD:gh-pages
