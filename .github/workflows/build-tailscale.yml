@@ -103,21 +103,9 @@ jobs:
             gomips: softfloat
             openwrt_arch: mipsel_24kc
 
-          # --- MIPS64 Big Endian ---
-          - goarch: mips64
-            openwrt_arch: mips64_mips64r2
-
-          # --- MIPS64 Little Endian ---
-          - goarch: mips64le
-            openwrt_arch: mips64el_mips64r2
-
           # --- RISC-V ---
           - goarch: riscv64
             openwrt_arch: riscv64_riscv64
-
-          # --- LoongArch ---
-          - goarch: loong64
-            openwrt_arch: loongarch64_generic
 
           # --- PowerPC64 ---
           - goarch: ppc64
@@ -161,8 +149,13 @@ jobs:
 
       - name: Compress binaries with UPX
         run: |
-          upx --best --lzma tailscaled
-          upx --best --lzma tailscale
+          # Try to compress with UPX.
+          # If UPX fails (unsupported arch like mips64, riscv64, etc.), 
+          # it prints a warning and proceeds with the uncompressed binary.
+          
+          for BIN in tailscaled tailscale; do
+            upx --best --lzma "$BIN" || echo "Warning: UPX compression failed for $BIN (Arch: ${{ matrix.goarch }}). Using uncompressed binary."
+          done
 
       - name: Package into IPK
         run: |
