@@ -1,6 +1,9 @@
 name: Build Small Tailscale
 
 on:
+  push:
+    branches:
+      - develop
   repository_dispatch:
     types: [upstream_release]
   workflow_dispatch:
