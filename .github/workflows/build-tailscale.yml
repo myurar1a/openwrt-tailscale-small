@@ -179,13 +179,20 @@ jobs:
           INSTALLED_SIZE=$(du -s ipk_build | cut -f1)
           echo "Installed-Size: $INSTALLED_SIZE" >> ipk_control/control
 
+          # Create data.tar.gz (Use * to avoid ./ prefix)
           cd ipk_build
-          tar --owner=0 --group=0 -czf ../data.tar.gz .
-          cd ../ipk_control
-          tar --owner=0 --group=0 -czf ../control.tar.gz .
+          tar --owner=0 --group=0 -czf ../data.tar.gz *
           cd ..
           
+          # Create control.tar.gz
+          cd ipk_control
+          tar --owner=0 --group=0 -czf ../control.tar.gz *
+          cd ..
+          
+          # Create debian-binary
           echo "2.0" > debian-binary
+          
+          # Create IPK (ar archive)
           ar r tailscale_${VERSION_NUM}_${ARCH}.ipk debian-binary control.tar.gz data.tar.gz
 
       - name: Upload Artifact
