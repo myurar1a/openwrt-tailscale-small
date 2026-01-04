@@ -196,7 +196,7 @@ jobs:
           TAGS="ts_include_cli"
           LDFLAGS="-s -w"
           echo "Building for $GOARCH (OpenWrt: ${{ matrix.openwrt_arch }})..."
-          go build -o tailscale.combined -tags "$TAGS" -ldflags "$LDFLAGS" ./cmd/tailscaled
+          go build -o ../tailscale.combined -tags "$TAGS" -ldflags "$LDFLAGS" ./cmd/tailscaled
 
       - name: Compress binaries with UPX
         run: |
