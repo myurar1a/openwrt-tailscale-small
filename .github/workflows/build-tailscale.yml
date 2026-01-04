@@ -193,10 +193,9 @@ jobs:
           GOMIPS: ${{ matrix.gomips }}
           CGO_ENABLED: 0
         run: |
-          TAGS="ts_include_cli"
-          LDFLAGS="-s -w"
-          echo "Building for $GOARCH (OpenWrt: ${{ matrix.openwrt_arch }})..."
-          go build -o ../tailscale.combined -tags "$TAGS" -ldflags "$LDFLAGS" ./cmd/tailscaled
+          chmod +x ./build_dist.sh
+          echo "Building tailscale.combined for $GOARCH using build_dist.sh..."
+          ./build_dist.sh --extra-small --box -o ../tailscale.combined ./cmd/tailscaled
 
       - name: Compress binaries with UPX
         run: |
@@ -276,7 +275,7 @@ jobs:
             Auto-generated small build for OpenWrt.
             Upstream: https://github.com/tailscale/tailscale/releases/tag/${{ needs.check-version.outputs.version }}
             
-            **Build Tags:** `ts_omit_aws, ts_omit_bird, ts_omit_tap, ts_omit_kube, ts_omit_wifi, ts_omit_uiserver`
+            **Build Flags:** `--extra-small --box`
             **Compression:** UPX --best --lzma
           files: artifacts/*.ipk
           prerelease: true # テスト中はプレリリース
