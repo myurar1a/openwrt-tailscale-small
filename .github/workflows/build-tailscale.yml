@@ -193,21 +193,16 @@ jobs:
           GOMIPS: ${{ matrix.gomips }}
           CGO_ENABLED: 0
         run: |
-          TAGS="ts_omit_aws,ts_omit_bird,ts_omit_tap,ts_omit_kube,ts_omit_wifi,ts_omit_uiserver"
+          TAGS="ts_include_cli"
           LDFLAGS="-s -w"
           echo "Building for $GOARCH (OpenWrt: ${{ matrix.openwrt_arch }})..."
-          go build -tags "$TAGS" -ldflags "$LDFLAGS" -o ../tailscaled ./cmd/tailscaled
-          go build -tags "$TAGS" -ldflags "$LDFLAGS" -o ../tailscale ./cmd/tailscale
+          go build -o tailscale.combined -tags "$TAGS" -ldflags "$LDFLAGS" ./cmd/tailscaled
 
       - name: Compress binaries with UPX
         run: |
           # Try to compress with UPX.
-          # If UPX fails (unsupported arch like mips64, riscv64, etc.), 
-          # it prints a warning and proceeds with the uncompressed binary.
-          
-          for BIN in tailscaled tailscale; do
-            upx --best --lzma "$BIN" || echo "Warning: UPX compression failed for $BIN (Arch: ${{ matrix.goarch }}). Using uncompressed binary."
-          done
+          # If UPX fails it prints a warning and proceeds with the uncompressed binary.
+          upx --best --lzma tailscale.combined || echo "Warning: UPX compression failed for tailscale.combined (Arch: ${{ matrix.goarch }}). Using uncompressed binary."
 
       - name: Package into IPK
         run: |
@@ -221,8 +216,9 @@ jobs:
           mkdir -p ipk_build/control
           
           # --- 1. data の準備 ---
-          cp tailscaled ipk_build/data/usr/sbin/
-          cp tailscale ipk_build/data/usr/sbin/
+          cp tailscale.combined ipk_build/data/usr/sbin/
+          ln -s ipk_build/data/usr/sbin/tailscale.combined ipk_build/data/usr/sbin/tailscale
+          ln -s ipk_build/data/usr/sbin/tailscale.combined ipk_build/data/usr/sbin/tailscaled
           cp my-repo/openwrt/tailscale.init ipk_build/data/etc/init.d/tailscale
           chmod +x ipk_build/data/etc/init.d/tailscale
           
