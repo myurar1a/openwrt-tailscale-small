@@ -28,7 +28,7 @@ jobs:
       - name: Check version
         id: check
         run: |
-          # 手動入力がある場合はそれを優先
+          # 手動入力がある場合はそちらを優先
           INPUT_VER="${{ inputs.force_version }}"
           SKIP_CHECK="${{ inputs.skip_check }}"
           
@@ -66,102 +66,50 @@ jobs:
     strategy:
       matrix:
         include:
-          # --- x86 (PC / Server) ---
+          # --- x86 ---
           - goarch: 386
-            openwrt_arch: i386_pentium-mmx
-          - goarch: 386
-            openwrt_arch: i386_pentium4
+            openwrt_archs: "i386_pentium-mmx i386_pentium4"
 
           # --- ARM64 (Raspberry Pi 4, NanoPi, etc.) ---
-          # "generic" covers cortex-a53, a72, a76
           - goarch: arm64
-            openwrt_arch: aarch64_cortex-a53
-          - goarch: arm64
-            openwrt_arch: aarch64_cortex-a72
-          - goarch: arm64
-            openwrt_arch: aarch64_cortex-a76
-          - goarch: arm64
-            openwrt_arch: aarch64_generic
+            openwrt_archs: "aarch64_cortex-a53 aarch64_cortex-a72 aarch64_cortex-a76 aarch64_generic"
 
           # --- ARMv7 (Raspberry Pi 2/3, etc.) ---
-          # "arm_cortex-a9" covers cortex-a5, a7, a8, a15 (neon/vfpv3/vfpv4)
           - goarch: arm
             goarm: 7
-            openwrt_arch: arm_cortex-a5_vfpv4
-          - goarch: arm
-            goarm: 7
-            openwrt_arch: arm_cortex-a7
-          - goarch: arm
-            goarm: 7
-            openwrt_arch: arm_cortex-a7_neon-vfpv4
-          - goarch: arm
-            goarm: 7
-            openwrt_arch: arm_cortex-a7_vfpv4
-          - goarch: arm
-            goarm: 7
-            openwrt_arch: arm_cortex-a8_vfpv3
-          - goarch: arm
-            goarm: 7
-            openwrt_arch: arm_cortex-a9
-          - goarch: arm
-            goarm: 7
-            openwrt_arch: arm_cortex-a9_neon
-          - goarch: arm
-            goarm: 7
-            openwrt_arch: arm_cortex-a9_vfpv3-d16
-          - goarch: arm
-            goarm: 7
-            openwrt_arch: arm_cortex-a15_neon-vfpv4
+            openwrt_archs: "arm_cortex-a5_vfpv4 arm_cortex-a7 arm_cortex-a7_neon-vfpv4 arm_cortex-a7_vfpv4 arm_cortex-a8_vfpv3 arm_cortex-a9 arm_cortex-a9_neon arm_cortex-a9_vfpv3-d16 arm_cortex-a15_neon-vfpv4"
 
           # --- ARMv6 (Raspberry Pi 1 / Zero) ---
           - goarch: arm
             goarm: 6
-            openwrt_arch: arm_arm1176jzf-s_vfp
+            openwrt_archs: "arm_arm1176jzf-s_vfp"
 
           # --- ARMv5 ---
           - goarch: arm
             goarm: 5
-            openwrt_arch: arm_arm926ej-s
-          - goarch: arm
-            goarm: 5
-            openwrt_arch: arm_xscale
+            openwrt_archs: "arm_arm926ej-s arm_xscale"
 
           # --- MIPS Big Endian (Atheros AR7xxx/AR9xxx, QCA9xxx) ---
           - goarch: mips
             gomips: softfloat
-            openwrt_arch: mips_24kc
-          - goarch: mips
-            gomips: softfloat
-            openwrt_arch: mips_4kec
-          - goarch: mips
-            gomips: softfloat
-            openwrt_arch: mips_mips32
+            openwrt_archs: "mips_24kc mips_4kec mips_mips32"
 
           # --- MIPS Little Endian (MediaTek MT76x8, Omega2, etc.) ---
           - goarch: mipsle
             gomips: softfloat
-            openwrt_arch: mipsel_24kc
-          - goarch: mipsle
-            gomips: softfloat
-            openwrt_arch: mipsel_24kc_24kf
-          - goarch: mipsle
-            gomips: softfloat
-            openwrt_arch: mipsel_74kc
-          - goarch: mipsle
-            gomips: softfloat
-            openwrt_arch: mipsel_mips32
+            openwrt_archs: "mipsel_24kc mipsel_24kc_24kf mipsel_74kc mipsel_mips32"
 
           # --- RISC-V ---
           - goarch: riscv64
-            openwrt_arch: riscv64_riscv64
+            openwrt_archs: "riscv64_riscv64"
 
           # --- PowerPC64 ---
           - goarch: ppc64
-            openwrt_arch: powerpc64_e5500
+            openwrt_archs: "powerpc64_e5500"
 
-          # --- x86_64 (PC / Server) ---
+          # --- x86_64 ---
           - goarch: amd64
-            openwrt_arch: x86_64
+            openwrt_archs: "x86_64"
 
     steps:
       - name: Checkout this repo
@@ -175,6 +123,7 @@ jobs:
           repository: tailscale/tailscale
           ref: ${{ needs.check-version.outputs.version }}
           path: tailscale-src
+          fetch-depth: 0
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -199,59 +148,69 @@ jobs:
 
       - name: Compress binaries with UPX
         run: |
-          # Try to compress with UPX.
-          # If UPX fails it prints a warning and proceeds with the uncompressed binary.
           upx --best --lzma tailscale.combined || echo "Warning: UPX compression failed for tailscale.combined (Arch: ${{ matrix.goarch }}). Using uncompressed binary."
 
       - name: Package into IPK
         run: |
           VERSION=${{ needs.check-version.outputs.version }}
           VERSION_NUM=${VERSION#v}
-          ARCH=${{ matrix.openwrt_arch }}
           
-          # 作業用ディレクトリの作成
-          mkdir -p ipk_build/data/usr/sbin
-          mkdir -p ipk_build/data/etc/init.d
-          mkdir -p ipk_build/control
+          # 出力先ディレクトリ
+          mkdir -p artifacts
           
-          # --- 1. data の準備 ---
-          cp tailscale.combined ipk_build/data/usr/sbin/
-          ln -s ipk_build/data/usr/sbin/tailscale.combined ipk_build/data/usr/sbin/tailscale
-          ln -s ipk_build/data/usr/sbin/tailscale.combined ipk_build/data/usr/sbin/tailscaled
-          cp my-repo/openwrt/tailscale.init ipk_build/data/etc/init.d/tailscale
-          chmod +x ipk_build/data/etc/init.d/tailscale
-          
-          # data.tar.gz の作成
-          cd ipk_build/data
-          tar --numeric-owner --group=0 --owner=0 -czf ../data.tar.gz *
-          cd ../..
-          
-          # --- 2. control の準備 ---
-          cp my-repo/openwrt/control ipk_build/control/control
-          sed -i "s/VERSION_PLACEHOLDER/$VERSION_NUM/g" ipk_build/control/control
-          sed -i "s/ARCH_PLACEHOLDER/$ARCH/g" ipk_build/control/control
-          
-          # dataディレクトリのサイズを計算して Installed-Size に設定
-          SIZE=$(du -sb ipk_build/data | awk '{ print $1 }')
-          echo "Installed-Size: $SIZE" >> ipk_build/control/control
-          
-          # control.tar.gz の作成
-          cd ipk_build/control
-          tar --numeric-owner --group=0 --owner=0 -czf ../control.tar.gz *
-          cd ../..
-          
-          # --- 3. .ipk ファイルの作成 ---
-          echo "2.0" > ipk_build/debian-binary
-          
-          # .ipk の作成
-          cd ipk_build
-          tar --numeric-owner --group=0 --owner=0 -czf tailscale_${VERSION_NUM}_${ARCH}.ipk debian-binary data.tar.gz control.tar.gz
-
+          # アーキテクチャリストをループ
+          for ARCH in ${{ matrix.openwrt_archs }}; do
+            echo "Packaging for $ARCH..."
+            
+            # ビルド用の一時ディレクトリをクリーンアップ
+            rm -rf ipk_build
+            mkdir -p ipk_build/data/usr/sbin
+            mkdir -p ipk_build/data/etc/init.d
+            mkdir -p ipk_build/control
+            
+            # --- data ---
+            cp tailscale.combined ipk_build/data/usr/sbin/
+            cd ipk_build/data/usr/sbin
+            ln -s tailscale.combined tailscale
+            ln -s tailscale.combined tailscaled
+            cd ../../../..
+            cp my-repo/openwrt/tailscale.init ipk_build/data/etc/init.d/tailscale
+            chmod +x ipk_build/data/etc/init.d/tailscale
+            
+            # build data.tar.gz
+            cd ipk_build/data
+            tar --numeric-owner --group=0 --owner=0 -czf ../data.tar.gz *
+            cd ../..
+            
+            # --- control ---
+            cp my-repo/openwrt/control ipk_build/control/control
+            sed -i "s/VERSION_PLACEHOLDER/$VERSION_NUM/g" ipk_build/control/control
+            sed -i "s/ARCH_PLACEHOLDER/$ARCH/g" ipk_build/control/control
+            
+            # dataのサイズを計算して Installed-Size に設定
+            SIZE=$(du -sb ipk_build/data | awk '{ print $1 }')
+            echo "Installed-Size: $SIZE" >> ipk_build/control/control
+            
+            # build control.tar.gz
+            cd ipk_build/control
+            tar --numeric-owner --group=0 --owner=0 -czf ../control.tar.gz *
+            cd ../..
+            
+            # --- .ipk ---
+            echo "2.0" > ipk_build/debian-binary
+            cd ipk_build
+            IPK_NAME="tailscale_${VERSION_NUM}_${ARCH}.ipk"
+            tar --numeric-owner --group=0 --owner=0 -czf "$IPK_NAME" debian-binary data.tar.gz control.tar.gz
+            
+            # 生成物を退避
+            mv "$IPK_NAME" ../artifacts/
+            cd ..
+          done
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tailscale_${{ matrix.openwrt_arch }}
-          path: "ipk_build/*.ipk"
+          name: tailscale_pkgs_${{ matrix.goarch }}_${{ matrix.goarm || '0' }}
+          path: "artifacts/*.ipk"
 
   release:
     needs: [check-version, build]
@@ -312,22 +271,33 @@ jobs:
       - name: Generate Index
         run: |
           cd repo-page
-          for ARCH_DIR in ../artifacts/*; do
-            ARCH_NAME=$(basename "$ARCH_DIR" | sed 's/tailscale_//')
+          for IPK in ../artifacts/*.ipk; do
+            ARCH_NAME=$(basename "$IPK" .ipk | awk -F_ '{print $NF}')
             mkdir -p "$ARCH_NAME"
+
+            # 古いIPKを削除
             rm -f "$ARCH_NAME"/*.ipk
-            cp "$ARCH_DIR"/*.ipk "$ARCH_NAME"/
-            cd "$ARCH_NAME"
-            echo "" > Packages
-            for IPK in *.ipk; do
-              ar p "$IPK" control.tar.gz | tar xzO ./control >> Packages
-              echo "Filename: $IPK" >> Packages
-              echo "Size: $(stat -c%s "$IPK")" >> Packages
-              echo "SHA256sum: $(sha256sum "$IPK" | cut -d' ' -f1)" >> Packages
-              echo "" >> Packages
-            done
-            gzip -k -f Packages
-            cd ..
+            
+            # 新しいIPKを配置
+            cp "$IPK" "$ARCH_NAME"/
+          done
+          
+          # インデックス生成
+          for ARCH_DIR in */; do
+            if [ -d "$ARCH_DIR" ]; then
+              cd "$ARCH_DIR"
+              echo "Generating index for $ARCH_DIR..."
+              echo "" > Packages
+              for IPK in *.ipk; do
+                ar p "$IPK" control.tar.gz | tar xzO ./control >> Packages
+                echo "Filename: $IPK" >> Packages
+                echo "Size: $(stat -c%s "$IPK")" >> Packages
+                echo "SHA256sum: $(sha256sum "$IPK" | cut -d' ' -f1)" >> Packages
+                echo "" >> Packages
+              done
+              gzip -k -f Packages
+              cd ..
+            fi
           done
 
       - name: Deploy to GitHub Pages
