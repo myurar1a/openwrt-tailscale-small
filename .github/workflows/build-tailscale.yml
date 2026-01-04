@@ -274,7 +274,7 @@ jobs:
           cd repo-page
           find ../artifacts -type f -name "*.ipk" | while read IPK; do
             echo "Processing $IPK..."
-            ARCH_NAME=$(basename "$IPK" .ipk | awk -F_ '{print $NF}')
+            ARCH_NAME=$(basename "$IPK" | sed -E 's/^tailscale_[^_]+_(.+)\.ipk$/\1/')
             mkdir -p "$ARCH_NAME"
 
             # ipkの更新
@@ -289,7 +289,7 @@ jobs:
               echo "Generating index for $ARCH_DIR..."
               echo "" > Packages
               for IPK in *.ipk; do
-                tar -xzOf "$IPK" control.tar.gz | tar xzO ./control >> Packages
+                tar -xzOf "$IPK" control.tar.gz | tar xzO control >> Packages
                 echo "Filename: $IPK" >> Packages
                 echo "Size: $(stat -c%s "$IPK")" >> Packages
                 echo "SHA256sum: $(sha256sum "$IPK" | cut -d' ' -f1)" >> Packages
@@ -297,6 +297,10 @@ jobs:
               done
               gzip -k -f Packages
               cd ..
+              else
+                # 不要な空ディレクトリがあれば削除
+                echo "Skipping $ARCH_DIR (no ipk files)"
+                cd .. && rm -rf "$ARCH_DIR" && continue
             fi
           done
 
