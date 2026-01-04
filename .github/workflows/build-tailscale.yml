@@ -289,7 +289,7 @@ jobs:
               echo "Generating index for $ARCH_DIR..."
               echo "" > Packages
               for IPK in *.ipk; do
-                ar p "$IPK" control.tar.gz | tar xzO ./control >> Packages
+                tar -xzOf "$IPK" control.tar.gz | tar xzO ./control >> Packages
                 echo "Filename: $IPK" >> Packages
                 echo "Size: $(stat -c%s "$IPK")" >> Packages
                 echo "SHA256sum: $(sha256sum "$IPK" | cut -d' ' -f1)" >> Packages
