@@ -66,14 +66,20 @@ jobs:
     strategy:
       matrix:
         include:
-          # --- x86 / x86_64 (PC / Server) ---
+          # --- x86 (PC / Server) ---
+          - goarch: 386
+            openwrt_arch: i386_pentium-mmx
           - goarch: 386
             openwrt_arch: i386_pentium4
-          - goarch: amd64
-            openwrt_arch: x86_64
 
           # --- ARM64 (Raspberry Pi 4, NanoPi, etc.) ---
           # "generic" covers cortex-a53, a72, a76
+          - goarch: arm64
+            openwrt_arch: aarch64_cortex-a53
+          - goarch: arm64
+            openwrt_arch: aarch64_cortex-a72
+          - goarch: arm64
+            openwrt_arch: aarch64_cortex-a76
           - goarch: arm64
             openwrt_arch: aarch64_generic
 
@@ -81,7 +87,31 @@ jobs:
           # "arm_cortex-a9" covers cortex-a5, a7, a8, a15 (neon/vfpv3/vfpv4)
           - goarch: arm
             goarm: 7
+            openwrt_arch: arm_cortex-a5_vfpv4
+          - goarch: arm
+            goarm: 7
+            openwrt_arch: arm_cortex-a7
+          - goarch: arm
+            goarm: 7
+            openwrt_arch: arm_cortex-a7_neon-vfpv4
+          - goarch: arm
+            goarm: 7
+            openwrt_arch: arm_cortex-a7_vfpv4
+          - goarch: arm
+            goarm: 7
+            openwrt_arch: arm_cortex-a8_vfpv3
+          - goarch: arm
+            goarm: 7
             openwrt_arch: arm_cortex-a9
+          - goarch: arm
+            goarm: 7
+            openwrt_arch: arm_cortex-a9_neon
+          - goarch: arm
+            goarm: 7
+            openwrt_arch: arm_cortex-a9_vfpv3-d16
+          - goarch: arm
+            goarm: 7
+            openwrt_arch: arm_cortex-a15_neon-vfpv4
 
           # --- ARMv6 (Raspberry Pi 1 / Zero) ---
           - goarch: arm
@@ -89,20 +119,37 @@ jobs:
             openwrt_arch: arm_arm1176jzf-s_vfp
 
           # --- ARMv5 ---
-          # "arm926ej-s" covers xscale
           - goarch: arm
             goarm: 5
             openwrt_arch: arm_arm926ej-s
+          - goarch: arm
+            goarm: 5
+            openwrt_arch: arm_xscale
 
           # --- MIPS Big Endian (Atheros AR7xxx/AR9xxx, QCA9xxx) ---
           - goarch: mips
             gomips: softfloat
             openwrt_arch: mips_24kc
+          - goarch: mips
+            gomips: softfloat
+            openwrt_arch: mips_4kec
+          - goarch: mips
+            gomips: softfloat
+            openwrt_arch: mips_mips32
 
           # --- MIPS Little Endian (MediaTek MT76x8, Omega2, etc.) ---
           - goarch: mipsle
             gomips: softfloat
             openwrt_arch: mipsel_24kc
+          - goarch: mipsle
+            gomips: softfloat
+            openwrt_arch: mipsel_24kc_24kf
+          - goarch: mipsle
+            gomips: softfloat
+            openwrt_arch: mipsel_74kc
+          - goarch: mipsle
+            gomips: softfloat
+            openwrt_arch: mipsel_mips32
 
           # --- RISC-V ---
           - goarch: riscv64
@@ -111,6 +158,10 @@ jobs:
           # --- PowerPC64 ---
           - goarch: ppc64
             openwrt_arch: powerpc64_e5500
+
+          # --- x86_64 (PC / Server) ---
+          - goarch: amd64
+            openwrt_arch: x86_64
 
     steps:
       - name: Checkout this repo
