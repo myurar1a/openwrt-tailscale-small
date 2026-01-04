@@ -160,40 +160,42 @@ jobs:
 
       - name: Package into IPK
         run: |
+        run: |
           VERSION=${{ needs.check-version.outputs.version }}
           VERSION_NUM=${VERSION#v}
           ARCH=${{ matrix.openwrt_arch }}
           
+          # 1. Install opkg-utils (Official OpenWrt tools)
+          git clone --depth 1 https://git.openwrt.org/project/opkg-utils.git
+          chmod +x opkg-utils/opkg-build
+          
+          # 2. Prepare directory structure for opkg-build
           mkdir -p ipk_build/usr/sbin
           mkdir -p ipk_build/etc/init.d
+          mkdir -p ipk_build/CONTROL  # Important: Directory must be named 'CONTROL'
+          
+          # Prepare files
           cp tailscaled ipk_build/usr/sbin/
           cp tailscale ipk_build/usr/sbin/
           cp my-repo/openwrt/tailscale.init ipk_build/etc/init.d/tailscale
           chmod +x ipk_build/etc/init.d/tailscale
+          cp my-repo/openwrt/control ipk_build/CONTROL/control
           
-          mkdir -p ipk_control
-          cp my-repo/openwrt/control ipk_control/control
-          sed -i "s/VERSION_PLACEHOLDER/$VERSION_NUM/g" ipk_control/control
-          sed -i "s/ARCH_PLACEHOLDER/$ARCH/g" ipk_control/control
+          # Replace placeholders
+          sed -i "s/VERSION_PLACEHOLDER/$VERSION_NUM/g" ipk_build/CONTROL/control
+          sed -i "s/ARCH_PLACEHOLDER/$ARCH/g" ipk_build/CONTROL/control
           
-          INSTALLED_SIZE=$(du -s ipk_build | cut -f1)
-          echo "Installed-Size: $INSTALLED_SIZE" >> ipk_control/control
-
-          # Create data.tar.gz (Use * to avoid ./ prefix)
-          cd ipk_build
-          tar --owner=0 --group=0 -czf ../data.tar.gz *
-          cd ..
+          # 3. Build the package using opkg-build
+          # -o root -g root ensures files are owned by root inside the package
+          ./opkg-utils/opkg-build -o root -g root ipk_build .
+          GENERATED_IPK=$(ls tailscale_*.ipk)
+          echo "Generated package: $GENERATED_IPK"
           
-          # Create control.tar.gz
-          cd ipk_control
-          tar --owner=0 --group=0 -czf ../control.tar.gz *
-          cd ..
-          
-          # Create debian-binary
-          echo "2.0" > debian-binary
-          
-          # Create IPK (ar archive)
-          ar cr tailscale_${VERSION_NUM}_${ARCH}.ipk debian-binary control.tar.gz data.tar.gz
+          # Ensure the filename matches what we expect for the artifact upload
+          EXPECTED_NAME="tailscale_${VERSION_NUM}_${ARCH}.ipk"
+          if [ "$GENERATED_IPK" != "$EXPECTED_NAME" ]; then
+            mv "$GENERATED_IPK" "$EXPECTED_NAME"
+          fi
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
