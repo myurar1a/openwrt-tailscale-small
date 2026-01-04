@@ -131,8 +131,8 @@ jobs:
           go-version: '1.22'
           cache-dependency-path: tailscale-src/go.sum
 
-      - name: Install UPX and build tools
-        run: sudo apt-get install -y upx-ucl fakeroot
+      - name: Install UPX
+        run: sudo apt-get install -y upx-ucl
 
       - name: Build Small Tailscale
         working-directory: tailscale-src
@@ -238,7 +238,7 @@ jobs:
             **Build Flags:** `--extra-small --box`
             **Compression:** UPX --best --lzma
           files: artifacts/*.ipk
-          prerelease: true # テスト中はプレリリース
+          prerelease: false
 
   deploy-repo:
     needs: [check-version, build]
@@ -252,7 +252,7 @@ jobs:
         with:
           ref: gh-pages
           path: repo-page
-        continue-on-error: true # 初回はブランチがないためエラー許容
+        continue-on-error: true
 
       - name: Initialize Repo Directory
         run: |
