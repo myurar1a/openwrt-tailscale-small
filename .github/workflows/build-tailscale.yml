@@ -129,6 +129,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.22'
+          cache-dependency-path: tailscale-src/go.sum
 
       - name: Install UPX and build tools
         run: sudo apt-get install -y upx-ucl fakeroot
@@ -271,14 +272,13 @@ jobs:
       - name: Generate Index
         run: |
           cd repo-page
-          for IPK in ../artifacts/*.ipk; do
+          find ../artifacts -type f -name "*.ipk" | while read IPK; do
+            echo "Processing $IPK..."
             ARCH_NAME=$(basename "$IPK" .ipk | awk -F_ '{print $NF}')
             mkdir -p "$ARCH_NAME"
 
-            # 古いIPKを削除
+            # ipkの更新
             rm -f "$ARCH_NAME"/*.ipk
-            
-            # 新しいIPKを配置
             cp "$IPK" "$ARCH_NAME"/
           done
           
