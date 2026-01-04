@@ -1,5 +1,5 @@
 # Small Tailscale for OpenWrt
-Automated build of a stripped-down, UPX-compressed [Tailscale](https://tailscale.com/) package for OpenWrt devices with limited storage (e.g., 16MB Flash).
+Automated build of a stripped-down, UPX-compressed [Tailscale](https://tailscale.com/) package for OpenWrt devices with limited storage.
 
 ## Features
 
@@ -11,7 +11,6 @@ Automated build of a stripped-down, UPX-compressed [Tailscale](https://tailscale
 - **Official Build Standards**:
   - Built using Tailscale's official `build_dist.sh` script with the `--extra-small` flag.
   - Compressed using `upx --best --lzma` as recommended in the official documentation.
-- **Auto-Update**: Includes a script to safely update the package automatically, preventing flash storage overflow.
 
 ## Supported Architectures
 
@@ -84,7 +83,7 @@ If you prefer to configure it manually:
 
 This project is based on the following official documentation:
 
-- **Tailscale KB**: [Small Tailscale for storage-constrained devices](https://tailscale.com/kb/1207/small-tailscale)
+- **Tailscale Docs**: [Smaller binaries for embedded devices](https://tailscale.com/kb/1207/small-tailscale)
 - **OpenWrt Wiki**: [Tailscale - Installation on storage constrained devices](https://openwrt.org/docs/guide-user/services/vpn/tailscale/start#installation_on_storage_constrained_devices)
 
 ## Disclaimer
