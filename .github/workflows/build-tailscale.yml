@@ -205,7 +205,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tailscale_${{ matrix.openwrt_arch }}
-          path: "*.ipk"
+          path: "ipk_build/*.ipk"
 
   release:
     needs: [check-version, build]
