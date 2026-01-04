@@ -1,0 +1,16 @@
+
+Package: tailscale
+Version: 1.92.3
+Depends: libc, ca-bundle, kmod-tun
+Source: https://github.com/tailscale/tailscale
+Section: net
+Architecture: arm_cortex-a7
+Maintainer: myurar1a <megasirome181@gmail.com>
+Description: Tailscale (Small Build)
+  A mesh VPN for easy device connections anywhere.
+  Stripped down and optimized for storage-constrained OpenWrt devices.
+Installed-Size: 3382759
+Filename: tailscale_1.92.3_arm_cortex-a7.ipk
+Size: 3383852
+SHA256sum: 46b4d9adb86af13458e683e04c4927c3a38ae11160862062fa60aaeb392267fc
+

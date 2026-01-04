@@ -1,0 +1,16 @@
+
+Package: tailscale
+Version: 1.92.3
+Depends: libc, ca-bundle, kmod-tun
+Source: https://github.com/tailscale/tailscale
+Section: net
+Architecture: arm_arm926ej-s
+Maintainer: myurar1a <megasirome181@gmail.com>
+Description: Tailscale (Small Build)
+  A mesh VPN for easy device connections anywhere.
+  Stripped down and optimized for storage-constrained OpenWrt devices.
+Installed-Size: 3396247
+Filename: tailscale_1.92.3_arm_arm926ej-s.ipk
+Size: 3397243
+SHA256sum: f5d3fa8c37c30b50cc4582d0a9b72d5d535510178c75b3d3080655555a66ee30
+
