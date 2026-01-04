@@ -160,7 +160,6 @@ jobs:
 
       - name: Package into IPK
         run: |
-        run: |
           VERSION=${{ needs.check-version.outputs.version }}
           VERSION_NUM=${VERSION#v}
           ARCH=${{ matrix.openwrt_arch }}
