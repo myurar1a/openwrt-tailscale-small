@@ -193,7 +193,7 @@ jobs:
           echo "2.0" > debian-binary
           
           # Create IPK (ar archive)
-          ar r tailscale_${VERSION_NUM}_${ARCH}.ipk debian-binary control.tar.gz data.tar.gz
+          ar cr tailscale_${VERSION_NUM}_${ARCH}.ipk debian-binary control.tar.gz data.tar.gz
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
