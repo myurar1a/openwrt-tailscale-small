@@ -61,9 +61,6 @@ FEED_CONF="/etc/opkg/customfeeds.conf"
 if ! grep -q "custom_tailscale" "$FEED_CONF"; then
     echo "src/gz custom_tailscale ${REPO_URL}" >> "$FEED_CONF"
 fi
-if ! grep -q "option check_signature 0" "$FEED_CONF"; then
-    echo "option check_signature 0" >> "$FEED_CONF"
-fi
 
 
 echo "[5/7] Installing Tailscale..."
