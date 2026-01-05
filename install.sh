@@ -10,8 +10,8 @@ INSTALL_PATH="$INSTALL_DIR/$CRON_SCRIPT"
 set -e
 echo "=== OpenWrt Small Tailscale Installer ==="
 
-# [1/6] Checking dependencies...
-echo "[1/6] Checking dependencies..."
+
+echo "[1/7] Checking dependencies..."
 if ! opkg list-installed | grep -q "curl"; then
     opkg update && opkg install curl
 fi
@@ -22,8 +22,8 @@ if ! opkg list-installed | grep -q "kmod-tun"; then
     opkg update && opkg install kmod-tun
 fi
 
-# [2/6] Detecting architecture...
-echo "[2/6] Detecting architecture..."
+
+echo "[2/7] Detecting architecture..."
 ARCH=$(opkg print-architecture | awk 'END {print $2}')
 REPO_URL="https://myurar1a.github.io/openwrt-tailscale-small/${ARCH}"
 
@@ -38,8 +38,25 @@ if [ "$HTTP_CODE" != "200" ]; then
 fi
 echo "Target: $ARCH"
 
-# [3/6] Configuring repository...
-echo "[3/6] Configuring repository..."
+
+echo "[3/7] Installing Public Key..."
+KEY_DIR="/etc/opkg/keys"
+if [ ! -d "$KEY_DIR" ]; then
+    mkdir -p "$KEY_DIR"
+fi
+
+# Download public key
+RAW_URL="https://raw.githubusercontent.com/myurar1a/openwrt-tailscale-small/refs/heads/main"
+PUBKEY_NAME="myurar1a-repo.pub"
+if curl -sL "$RAW_URL/cert/$PUBKEY_NAME" -o "$KEY_DIR/$PUBKEY_NAME"; then
+    echo "Public key installed to $KEY_DIR/$PUBKEY_NAME"
+else
+    echo "Error: Failed to download public key."
+    exit 1
+fi
+
+
+echo "[4/7] Configuring repository..."
 FEED_CONF="/etc/opkg/customfeeds.conf"
 if ! grep -q "custom_tailscale" "$FEED_CONF"; then
     echo "src/gz custom_tailscale ${REPO_URL}" >> "$FEED_CONF"
@@ -48,11 +65,15 @@ if ! grep -q "option check_signature 0" "$FEED_CONF"; then
     echo "option check_signature 0" >> "$FEED_CONF"
 fi
 
-# [4/6] Installing Tailscale...
-echo "[4/6] Installing Tailscale..."
-opkg update
-INSTALLED=$(opkg list-installed tailscale | awk '{print $3}')
 
+echo "[5/7] Installing Tailscale..."
+if ! opkg update; then
+    echo "Error: 'opkg update' failed. Signature verification might have failed."
+    echo "Please check if the repository is correctly signed."
+    exit 1
+fi
+
+INSTALLED=$(opkg list-installed tailscale | awk '{print $3}')
 if [ -n "$INSTALLED" ]; then
     echo "Tailscale is already installed ($INSTALLED)."
     printf "Re-install to ensure latest version? [y/N]: "
@@ -65,8 +86,8 @@ else
     opkg install tailscale
 fi
 
-# [5/6] Installing auto-update script...
-echo "[5/6] Installing auto-update script..."
+
+echo "[6/7] Installing auto-update script..."
 
 # Create directory if it doesn't exist
 if [ ! -d "$INSTALL_DIR" ]; then
@@ -74,12 +95,12 @@ if [ ! -d "$INSTALL_DIR" ]; then
     mkdir -p "$INSTALL_DIR"
 fi
 
-curl -sL "https://raw.githubusercontent.com/myurar1a/openwrt-tailscale-small/main/scripts/upd-tailscale.sh" -o "$INSTALL_PATH"
+curl -sL "$RAW_URL/install.sh" -o "$INSTALL_PATH"
 chmod +x "$INSTALL_PATH"
 echo "Script installed to $INSTALL_PATH"
 
-# [6/6] Scheduling Cron job...
-echo "[6/6] Scheduling Cron job..."
+
+echo "[7/7] Scheduling Cron job..."
 
 if crontab -l 2>/dev/null | grep -q "$INSTALL_PATH"; then
     echo "Cron job already exists."

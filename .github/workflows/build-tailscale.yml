@@ -270,19 +270,22 @@ jobs:
           path: artifacts
 
       - name: Generate Index
+        env:
+          USIGN_KEY: ${{ secrets.USIGN_PRIVATE_KEY }}
         run: |
           cd repo-page
+          echo "$USIGN_KEY" > key.sec
+          
+          # ipkを配置
           find ../artifacts -type f -name "*.ipk" | while read IPK; do
             echo "Processing $IPK..."
             ARCH_NAME=$(basename "$IPK" | sed -E 's/^tailscale_[^_]+_(.+)\.ipk$/\1/')
             mkdir -p "$ARCH_NAME"
-
-            # ipkの更新
             rm -f "$ARCH_NAME"/*.ipk
             cp "$IPK" "$ARCH_NAME"/
           done
           
-          # インデックス生成
+          # インデックス生成と署名
           for ARCH_DIR in */; do
             if [ -d "$ARCH_DIR" ]; then
               cd "$ARCH_DIR"
@@ -296,6 +299,12 @@ jobs:
                 echo "" >> Packages
               done
               gzip -k -f Packages
+
+              echo "Signing Packages..."
+              docker run --rm -v "$PWD":/work -w /work alpine:latest /bin/sh -c "
+                apk add --no-cache usign && \
+                usign -S -m Packages -s ../../key.sec -x Packages.sig
+              "
               cd ..
               else
                 # 不要な空ディレクトリがあれば削除

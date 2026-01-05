@@ -33,7 +33,7 @@ This script handles dependencies, repository setup, installation, and auto-updat
 ```sh
 opkg update
 opkg install curl ca-bundle kmod-tun
-sh -c "$(curl -sL https://raw.githubusercontent.com/myurar1a/openwrt-tailscale-small/main/scripts/install.sh)"
+sh -c "$(curl -sL https://raw.githubusercontent.com/myurar1a/openwrt-tailscale-small/refs/heads/main/install.sh)"
 
 tailscale up
 tailscale status
