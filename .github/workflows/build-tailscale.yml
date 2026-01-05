@@ -301,10 +301,11 @@ jobs:
               gzip -k -f Packages
 
               echo "Signing Packages..."
-              docker run --rm -v "$PWD":/work -w /work alpine:latest /bin/sh -c "
-                apk add --no-cache usign && \
-                usign -S -m Packages -s ../../key.sec -x Packages.sig
-              "
+                docker run --rm -v "$PWD":/work -w /work openwrt/rootfs:latest /bin/sh -c "
+                  opkg update && \
+                  opkg install usign && \
+                  usign -S -m Packages -s ../key.sec -x Packages.sig
+                "
               cd ..
               else
                 # 不要な空ディレクトリがあれば削除
