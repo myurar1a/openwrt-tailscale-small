@@ -301,7 +301,7 @@ jobs:
               gzip -k -f Packages
 
               echo "Signing Packages..."
-                docker run --rm -v "$PWD":/work -w /work openwrtorg/rootfs:x86_64-24.10.5 /bin/sh -c "
+                docker run --rm -v "$PWD":/work -w /work openwrt/rootfs:latest /bin/sh -c "
                   opkg update && \
                   opkg install usign && \
                   usign -S -m Packages -s ../key.sec -x Packages.sig
