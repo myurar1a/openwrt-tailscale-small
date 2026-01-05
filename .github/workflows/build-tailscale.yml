@@ -238,7 +238,7 @@ jobs:
             **Build Flags:** `--extra-small --box`
             **Compression:** UPX --best --lzma
           files: artifacts/*.ipk
-          prerelease: false
+          prerelease: ${{ github.ref == 'refs/heads/develop' }}
 
   deploy-repo:
     needs: [check-version, build]
