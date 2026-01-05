@@ -11,6 +11,6 @@ Description: Tailscale (Small Build)
   Stripped down and optimized for storage-constrained OpenWrt devices.
 Installed-Size: 3343195
 Filename: tailscale_1.92.3_powerpc64_e5500.ipk
-Size: 3343989
-SHA256sum: 2fa023dd2a5fff9a22aadcb5fa6854009bc0099e9a5962aa626ac5626fb85318
+Size: 3343988
+SHA256sum: 81ad41ea6d2ba14cd7dc912e4c0b68ed754babc8e430c56d8ce68424afb0298a
 

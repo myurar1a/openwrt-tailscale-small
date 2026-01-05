@@ -11,6 +11,6 @@ Description: Tailscale (Small Build)
   Stripped down and optimized for storage-constrained OpenWrt devices.
 Installed-Size: 3396247
 Filename: tailscale_1.92.3_arm_xscale.ipk
-Size: 3397240
-SHA256sum: 55f4e91184a0011476ee825db1c0f4b55491a9c86cd3b04f56309fa93c909bc7
+Size: 3397236
+SHA256sum: 039a216cdb50a8f07e07ac6b843dc67b91f295db1a5d3f49d06bab00888ce970
 
