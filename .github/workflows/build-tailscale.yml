@@ -314,6 +314,7 @@ jobs:
                 cd .. && rm -rf "$ARCH_DIR" && continue
             fi
           done
+          rm key.sec
 
       - name: Deploy to GitHub Pages
         working-directory: repo-page
