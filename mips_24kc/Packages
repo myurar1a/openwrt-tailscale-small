@@ -11,6 +11,6 @@ Description: Tailscale (Small Build)
   Stripped down and optimized for storage-constrained OpenWrt devices.
 Installed-Size: 3304027
 Filename: tailscale_1.92.3_mips_24kc.ipk
-Size: 3304410
-SHA256sum: a66233adac0ad0261d8108be970ad2bc5c6088cf9b8c783d0402346dea10b092
+Size: 3304409
+SHA256sum: 890901b0c967149687e8c77bf4ee53a28c08ca6826c89463f07217139896aeb8
 

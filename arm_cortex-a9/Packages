@@ -11,6 +11,6 @@ Description: Tailscale (Small Build)
   Stripped down and optimized for storage-constrained OpenWrt devices.
 Installed-Size: 3382759
 Filename: tailscale_1.92.3_arm_cortex-a9.ipk
-Size: 3383843
-SHA256sum: f3f320bfb4d593ea3b62d1f1fc1122abf4167932c7cd3a3a4aa80bfe1737363b
+Size: 3383853
+SHA256sum: 840b49a13c661147b79d45f137e3e779456e6dc9f21b54ed632818d340a47626
 
