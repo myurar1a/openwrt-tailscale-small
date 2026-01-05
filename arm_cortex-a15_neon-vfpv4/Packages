@@ -11,6 +11,6 @@ Description: Tailscale (Small Build)
   Stripped down and optimized for storage-constrained OpenWrt devices.
 Installed-Size: 3382759
 Filename: tailscale_1.92.3_arm_cortex-a15_neon-vfpv4.ipk
-Size: 3383863
-SHA256sum: 549e1d7f7b3a3ee17150ea09204eeff6be706fb43650492f17d6fc50b4eb7bf9
+Size: 3383855
+SHA256sum: f0db122a99ad83e6ca8b68eaab260a43bb773f084c69a69f25577734037b07fd
 
