@@ -302,6 +302,7 @@ jobs:
 
               echo "Signing Packages..."
                 docker run --rm -v "$PWD":/work -w /work openwrt/rootfs:x86-64-23.05.5 /bin/sh -c "
+                  mkdir -p /var/lock /var/run && \
                   opkg update && \
                   opkg install usign && \
                   usign -S -m Packages -s ../key.sec -x Packages.sig
