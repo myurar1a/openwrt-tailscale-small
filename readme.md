@@ -21,7 +21,6 @@ Automated build of a stripped-down, UPX-compressed [Tailscale](https://tailscale
 - **MIPS** (mips, mipsel)
 - **RISC-V64** (riscv64)
 - **PPC64** (powerpc64_e5500)
-- And many others (see GitHub Actions matrix).
 
 ---
 
@@ -64,14 +63,18 @@ The installer sets up a cron job that runs `~/scripts/upd-tailscale.sh` every 6 
 
 If you prefer to configure it manually:
 
-1. **Add Repository**:
+1. **Add Signature**:
+   ```sh
+   curl -sL "https://raw.githubusercontent.com/myurar1a/openwrt-tailscale-small/refs/heads/main/cert/myurar1a-repo.pub" -o "/etc/opkg/keys/myurar1a-repo.pub"
+   ```
+
+2. **Add Repository**:
    Add the following to `/etc/opkg/customfeeds.conf` (Replace `<ARCH>` with your architecture):
    ```text
    src/gz custom_tailscale https://myurar1a.github.io/openwrt-tailscale-small/<ARCH>
-   option check_signature 0
    ```
 
-2. **Install**:
+3. **Install**:
    ```sh
    opkg update
    opkg install tailscale
@@ -89,4 +92,4 @@ This project is based on the following official documentation:
 ## Disclaimer
 
 This is an unofficial build. Use at your own risk.
-Original source code: [tailscale/tailscale](https://github.com/tailscale/tailscale)
+Original software source code: [tailscale/tailscale](https://github.com/tailscale/tailscale)

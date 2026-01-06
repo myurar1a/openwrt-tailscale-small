@@ -175,7 +175,10 @@ jobs:
             ln -s tailscale.combined tailscale
             ln -s tailscale.combined tailscaled
             cd ../../../..
-            cp my-repo/openwrt/tailscale.init ipk_build/data/etc/init.d/tailscale
+
+            cp my-repo/openwrt/data/tailscale.config ipk_build/data/etc/config/tailscale
+            cp my-repo/openwrt/data/tailscale.init ipk_build/data/etc/init.d/tailscale
+            cp my-repo/openwrt/data/tailscale.keep ipk_build/data/lib/upgrade/keep.d/tailscale
             chmod +x ipk_build/data/etc/init.d/tailscale
             
             # build data.tar.gz
@@ -184,7 +187,11 @@ jobs:
             cd ../..
             
             # --- control ---
-            cp my-repo/openwrt/control ipk_build/control/control
+            cp my-repo/openwrt/control/conffiles ipk_build/control/conffiles
+            cp my-repo/openwrt/control/control ipk_build/control/control
+            cp my-repo/openwrt/control/postinst ipk_build/control/postinst
+            cp my-repo/openwrt/control/prerm ipk_build/control/prerm
+            
             sed -i "s/VERSION_PLACEHOLDER/$VERSION_NUM/g" ipk_build/control/control
             sed -i "s/ARCH_PLACEHOLDER/$ARCH/g" ipk_build/control/control
             
