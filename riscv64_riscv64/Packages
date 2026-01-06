@@ -3,14 +3,20 @@ Package: tailscale
 Version: 1.92.3
 Depends: libc, ca-bundle, kmod-tun
 Source: https://github.com/tailscale/tailscale
+SourceName: tailscale
+License: BSD-3-Clause
+LicenseFiles: LICENSE
 Section: net
-Architecture: riscv64_riscv64
+SourceDateEpoch: 1767277472
+URL: https://tailscale.com
+CPE-ID: cpe:/a:tailscale:tailscale
 Maintainer: myurar1a <megasirome181@gmail.com>
-Description: Tailscale (Small Build)
-  A mesh VPN for easy device connections anywhere.
-  Stripped down and optimized for storage-constrained OpenWrt devices.
-Installed-Size: 13107731
+Architecture: riscv64_riscv64
+Description: Small Tailscale. 
+ It creates a secure network between your servers, computers,
+ and cloud instances. Even when separated by firewalls or subnets.
+Installed-Size: 13109054
 Filename: tailscale_1.92.3_riscv64_riscv64.ipk
-Size: 5112519
-SHA256sum: 4934d84f1a03d0e2dcfcc31202143f2e35f70b54d5877b4b2a9913efcf22f482
+Size: 5113298
+SHA256sum: 4292a1b5da4389cd927ab5fdab3000f7c28699ca59c3f1e72de6ff4de7675e23
 
