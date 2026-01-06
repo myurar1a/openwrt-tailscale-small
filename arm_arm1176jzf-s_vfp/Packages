@@ -17,6 +17,6 @@ Description: Small Tailscale.
  and cloud instances. Even when separated by firewalls or subnets.
 Installed-Size: 3392410
 Filename: tailscale_1.92.3_arm_arm1176jzf-s_vfp.ipk
-Size: 3393177
-SHA256sum: edd2eb604c8f9cc3e573078c1c1376b931f0644fe73eee10628be211dc6cb650
+Size: 3393175
+SHA256sum: c61d5c357458fd7642a2c7ea28a3c98b8f427c117e54b551bf99b3f481fd0242
 
