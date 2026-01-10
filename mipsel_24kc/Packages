@@ -15,8 +15,8 @@ Architecture: mipsel_24kc
 Description: Small Tailscale. 
  It creates a secure network between your servers, computers,
  and cloud instances. Even when separated by firewalls or subnets.
-Installed-Size: 3369370
+Installed-Size: 3378290
 Filename: tailscale_1.92.5_mipsel_24kc.ipk
-Size: 3369558
-SHA256sum: 9033872a86359f29c02e2faff94afe826f8884e400cf98cb44060f497a4fb1b0
+Size: 3378453
+SHA256sum: 6843f3e82abb8473798bca95b0fec9cf600e25c482299d98fa1efb8d369c6fd9
 

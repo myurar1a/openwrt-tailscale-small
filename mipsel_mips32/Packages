@@ -15,8 +15,8 @@ Architecture: mipsel_mips32
 Description: Small Tailscale. 
  It creates a secure network between your servers, computers,
  and cloud instances. Even when separated by firewalls or subnets.
-Installed-Size: 3369370
+Installed-Size: 3378290
 Filename: tailscale_1.92.5_mipsel_mips32.ipk
-Size: 3369565
-SHA256sum: 53e3c5620678e5fb689191fd25d27e2b8111b4e037c66aab406831309d9cdaf3
+Size: 3378456
+SHA256sum: b432daf2a1a35246ec65542fcfd27165a9f84fa7aeb12cf4559c67cb53cec1db
 

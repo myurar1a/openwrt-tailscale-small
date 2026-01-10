@@ -15,8 +15,8 @@ Architecture: mips_24kc
 Description: Small Tailscale. 
  It creates a secure network between your servers, computers,
  and cloud instances. Even when separated by firewalls or subnets.
-Installed-Size: 3305782
+Installed-Size: 3315014
 Filename: tailscale_1.92.5_mips_24kc.ipk
-Size: 3305963
-SHA256sum: b9fe577d3a42fe6321bae438df519d0fae9a1d6248f3d39434f01c8fa3857892
+Size: 3315106
+SHA256sum: e777ead6e1e74bf54e522a59fcea884be53ca5178c0aafec24024c25ce01c790
 

@@ -15,8 +15,8 @@ Architecture: mips_mips32
 Description: Small Tailscale. 
  It creates a secure network between your servers, computers,
  and cloud instances. Even when separated by firewalls or subnets.
-Installed-Size: 3305782
+Installed-Size: 3315014
 Filename: tailscale_1.92.5_mips_mips32.ipk
-Size: 3305962
-SHA256sum: 108842269d3bfe851662e1f45ee17beb17a92e1059f35e1d8b4a52e0ec1edb6e
+Size: 3315104
+SHA256sum: 85e07473a4c50644517f2c9f2175a0641d544740e2ff50ed1957f1a21ae0c547
 

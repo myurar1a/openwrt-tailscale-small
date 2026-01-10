@@ -15,8 +15,8 @@ Architecture: aarch64_generic
 Description: Small Tailscale. 
  It creates a secure network between your servers, computers,
  and cloud instances. Even when separated by firewalls or subnets.
-Installed-Size: 3408682
+Installed-Size: 3419058
 Filename: tailscale_1.92.5_aarch64_generic.ipk
-Size: 3409485
-SHA256sum: 1b9b00654f373746df9649901cf47ded8ead099ece6a0a35bf0b0a7d6dbcea95
+Size: 3419828
+SHA256sum: 36fa8604126166e9eef3b0070f948fee7193b61ca375810020959f96db63a2a4
 
