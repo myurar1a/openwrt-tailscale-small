@@ -143,6 +143,9 @@ jobs:
           GOMIPS: ${{ matrix.gomips }}
           CGO_ENABLED: 0
         run: |
+          # --extra-small オプション処理内のfeaturetags 実行引数に unixsocketidentity を追加
+          sed -i 's/--add=osrouter/--add=osrouter,unixsocketidentity/' build_dist.sh
+
           chmod +x ./build_dist.sh
           echo "Building tailscale.combined for $GOARCH using build_dist.sh..."
           ./build_dist.sh --extra-small --box -o ../tailscale.combined ./cmd/tailscaled
