@@ -143,8 +143,33 @@ jobs:
           GOMIPS: ${{ matrix.gomips }}
           CGO_ENABLED: 0
         run: |
-          # --extra-small オプション処理内のfeaturetags 実行引数に unixsocketidentity を追加
-          sed -i 's/--add=osrouter/--add=osrouter,unixsocketidentity/' build_dist.sh
+          # --- 追加タグ定義 ---
+          # must
+          TAGS_BASE="osrouter,unixsocketidentity"
+          
+          # networks
+          TAGS_NET="dns,listenrawdisco,netstack,portmapper"
+          
+          # manage
+          TAGS_MANAGE="bakedroots,c2n,oauthkey"
+          
+          # os
+          TAGS_OS="iptables,linkspeed,linuxdnsfight"
+          
+          # optimize
+          TAGS_OPT="gro,lazywg"
+          
+          # features
+          TAGS_FEAT="advertiseexitnode,advertiseroutes,useexitnode,useroutes"
+          
+          # utilities
+          TAGS_UTIL="outboundproxy,ssh,wakeonlan"
+          
+          # 全タグをカンマ区切りで結合
+          ALL_TAGS="${TAGS_BASE},${TAGS_NET},${TAGS_MANAGE},${TAGS_OS},${TAGS_OPT},${TAGS_FEAT},${TAGS_UTIL}"
+          
+          # --extra-small オプション処理内の featuretags 実行引数に各タグを追加
+          sed -i "s/--add=osrouter/--add=${ALL_TAGS}/" build_dist.sh
 
           chmod +x ./build_dist.sh
           echo "Building tailscale.combined for $GOARCH using build_dist.sh..."
