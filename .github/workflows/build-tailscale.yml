@@ -147,7 +147,7 @@ jobs:
           # must
           TAGS_BASE="osrouter,unixsocketidentity"
           
-          # networks
+          # networks (netstack depends on clientmetrics)
           TAGS_NET="dns,listenrawdisco,portmapper"
           
           # manage
@@ -156,13 +156,13 @@ jobs:
           # os
           TAGS_OS="iptables,linkspeed,linuxdnsfight"
           
-          # optimize
-          TAGS_OPT="gro,lazywg"
+          # optimize (gro depends on clientmetrics)
+          TAGS_OPT="lazywg"
           
           # features
           TAGS_FEAT="advertiseexitnode,advertiseroutes,useexitnode,useroutes"
           
-          # utilities
+          # utilities (ssh depends on clientmetrics)
           TAGS_UTIL="wakeonlan"
           
           # 全タグをカンマ区切りで結合
