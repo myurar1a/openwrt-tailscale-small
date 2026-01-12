@@ -15,8 +15,8 @@ Architecture: arm_xscale
 Description: Small Tailscale. 
  It creates a secure network between your servers, computers,
  and cloud instances. Even when separated by firewalls or subnets.
-Installed-Size: 3704302
+Installed-Size: 4266846
 Filename: tailscale_1.92.5_arm_xscale.ipk
-Size: 3705203
-SHA256sum: 262f4ffeb2fb94350958ae708dab3426ff9b55777e4bf3428d7bc80ba74f70dc
+Size: 4267872
+SHA256sum: 70c219a3cad506c489f3ed737e319208ea88c84ac0feedfdbbe9deb86966734e
 

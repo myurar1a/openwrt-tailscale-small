@@ -15,8 +15,8 @@ Architecture: aarch64_cortex-a76
 Description: Small Tailscale. 
  It creates a secure network between your servers, computers,
  and cloud instances. Even when separated by firewalls or subnets.
-Installed-Size: 3723738
+Installed-Size: 4322282
 Filename: tailscale_1.92.5_aarch64_cortex-a76.ipk
-Size: 3724538
-SHA256sum: 1cb390ce2488c0e1cc72bbfc3c4966d651d85d23a78f7e0044b76177ebab5d9f
+Size: 4323334
+SHA256sum: 0b4c98c5089099ad9365e7146e06bf71b132b4c6b57cd5f66ca6387bcd4f91ce
 

@@ -15,8 +15,8 @@ Architecture: aarch64_cortex-a72
 Description: Small Tailscale. 
  It creates a secure network between your servers, computers,
  and cloud instances. Even when separated by firewalls or subnets.
-Installed-Size: 3723738
+Installed-Size: 4322282
 Filename: tailscale_1.92.5_aarch64_cortex-a72.ipk
-Size: 3724536
-SHA256sum: b7f331db432416ab69a13d43b5b62e61e01ea57d4b795b1935d016260ba564f7
+Size: 4323333
+SHA256sum: 79c3106c799bf51e839d292567466ce4de73829f0543ae103485dd90b07df00d
 
