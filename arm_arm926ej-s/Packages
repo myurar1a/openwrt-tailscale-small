@@ -15,8 +15,8 @@ Architecture: arm_arm926ej-s
 Description: Small Tailscale. 
  It creates a secure network between your servers, computers,
  and cloud instances. Even when separated by firewalls or subnets.
-Installed-Size: 3671538
+Installed-Size: 3704302
 Filename: tailscale_1.92.5_arm_arm926ej-s.ipk
-Size: 3672372
-SHA256sum: 4b340dc7e86d6681890a9b410441be423de0282f6174685f7918003fc85efec5
+Size: 3705210
+SHA256sum: a8af82648851c8f6814fdbae275990fbd07fe638b8db24592caa9f1147104adc
 
