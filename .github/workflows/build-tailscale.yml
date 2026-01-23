@@ -145,10 +145,11 @@ jobs:
         run: |
           # --- 追加タグ定義 ---
           # must
-          TAGS_BASE="osrouter,unixsocketidentity"
+          TAGS_BASE="osrouter,debug,unixsocketidentity"
           
           # networks (netstack depends on clientmetrics)
-          TAGS_NET="clientmetrics,dns,listenrawdisco,netstack,portmapper"
+          TAGS_NET="dns,listenrawdisco,portmapper"
+          #TAGS_NET="clientmetrics,dns,listenrawdisco,netstack,portmapper"
           
           # manage
           TAGS_MANAGE="bakedroots,c2n,oauthkey"
@@ -157,7 +158,8 @@ jobs:
           TAGS_OS="iptables,linkspeed,linuxdnsfight"
           
           # optimize (gro depends on clientmetrics)
-          TAGS_OPT="gro,lazywg"
+          TAGS_OPT="lazywg"
+          #TAGS_OPT="gro,lazywg"
           
           # features
           TAGS_FEAT="advertiseexitnode,advertiseroutes,useexitnode,useroutes"
