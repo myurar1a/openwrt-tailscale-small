@@ -15,8 +15,8 @@ Architecture: arm_arm1176jzf-s_vfp
 Description: Small Tailscale. 
  It creates a secure network between your servers, computers,
  and cloud instances. Even when separated by firewalls or subnets.
-Installed-Size: 3252418
+Installed-Size: 4422318
 Filename: tailscale_1.92.5_arm_arm1176jzf-s_vfp.ipk
-Size: 3253214
-SHA256sum: 0456bd2dc1a4165a2f648eac89de2263f8366d80c249bde4ee9d92f1a1d56c9e
+Size: 4423420
+SHA256sum: 12e730f5b700f1c5ac868ef566b43de994ea578563b302e03161a17833259594
 
