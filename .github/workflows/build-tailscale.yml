@@ -54,7 +54,7 @@ jobs:
           TAGS_UTIL="wakeonlan"
           
           # 全タグをカンマ区切りで結合
-          ALL_TAGS="${TAGS_BASE},${TAGS_NET},${TAGS_MANAGE},${TAGS_OS},${TAGS_OPT},${TAGS_FEAT},${TAGS_UTIL}"
+          tags="${TAGS_BASE},${TAGS_NET},${TAGS_MANAGE},${TAGS_OS},${TAGS_OPT},${TAGS_FEAT},${TAGS_UTIL}"
           
       - name: Check version
         id: check
