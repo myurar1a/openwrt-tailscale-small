@@ -1,6 +1,6 @@
 
 Package: tailscale
-Version: 1.92.5
+Version: 1.94.1
 Depends: libc, ca-bundle, kmod-tun
 Source: https://github.com/tailscale/tailscale
 SourceName: tailscale
@@ -15,8 +15,8 @@ Architecture: x86_64
 Description: Small Tailscale. 
  It creates a secure network between your servers, computers,
  and cloud instances. Even when separated by firewalls or subnets.
-Installed-Size: 5433430
-Filename: tailscale_1.92.5_x86_64.ipk
-Size: 5434429
-SHA256sum: e5750d145ac8ad4d7e874b7b949c816e1ddec2b9eed43164871548235abbbcf8
+Installed-Size: 5381458
+Filename: tailscale_1.94.1_x86_64.ipk
+Size: 5382455
+SHA256sum: c356185eedf03b44f79b017b4009318462dfcd3db036af9e1028b7972a755912
 

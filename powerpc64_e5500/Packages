@@ -1,6 +1,6 @@
 
 Package: tailscale
-Version: 1.92.5
+Version: 1.94.1
 Depends: libc, ca-bundle, kmod-tun
 Source: https://github.com/tailscale/tailscale
 SourceName: tailscale
@@ -15,8 +15,8 @@ Architecture: powerpc64_e5500
 Description: Small Tailscale. 
  It creates a secure network between your servers, computers,
  and cloud instances. Even when separated by firewalls or subnets.
-Installed-Size: 4418790
-Filename: tailscale_1.92.5_powerpc64_e5500.ipk
-Size: 4419657
-SHA256sum: 89510a7418feb1be735935d94d84c11b02f056c4a51ce8c0657b5172b7f84897
+Installed-Size: 4377166
+Filename: tailscale_1.94.1_powerpc64_e5500.ipk
+Size: 4377930
+SHA256sum: 42feb80bf283d2e705da7e2a58f840186c7f9e5555efd4490fa680c0fbc9bdad
 
