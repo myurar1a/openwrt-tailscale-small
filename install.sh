@@ -37,12 +37,9 @@ if [ -f /etc/openwrt_release ]; then
                 exit 0
 
             elif [ "$MAJOR" -eq 24 ]; then
-                # Version 24.10 (Install ethtool)
-                echo "Version 24.10 detected. Verifying ethtool..."
-                if ! opkg list-installed | grep -q "ethtool"; then
-                    echo "Installing ethtool..."
-                    opkg update && opkg install ethtool
-                fi
+                # Version 24.10
+                # Modified: ethtool installation moved to optional step later
+                echo "Version 24.x detected."
 
             else
                 # Version 23.05 or older (22, 23)
@@ -229,6 +226,32 @@ else
     echo "Skipping network configuration."
 fi
 
+if [ -n "$MAJOR" ] && [ "$MAJOR" -eq 24 ]; then
+    echo ""
+    echo "=== Performance Optimization (OpenWrt 24.x) ==="
+    echo "OpenWrt 24 supports UDP transport layer offloading (UDP-GRO/GSO),"
+    echo "which can significantly improve Tailscale throughput."
+    echo ""
+    echo "To enable this, 'ethtool' is required, along with specific hardware configuration."
+    echo "Please refer to the following documents for setup:"
+    echo "1. https://tailscale.com/kb/1320/performance-best-practices#linux-optimizations-for-subnet-routers-and-exit-nodes"
+    echo "2. https://openwrt.org/docs/guide-user/services/vpn/tailscale/start#throughput_improvements_via_transport_layer_offloading_in_openwrt_2410"
+    echo ""
+    
+    printf "Do you want to install 'ethtool' now? [y/N]: "
+    read INSTALL_ETHTOOL
+
+    if [ "$INSTALL_ETHTOOL" = "y" ] || [ "$INSTALL_ETHTOOL" = "Y" ]; then
+        echo "Installing ethtool..."
+        opkg update && opkg install ethtool
+        echo "ethtool installed. Please follow the documentation to configure offloading."
+    else
+        echo "Skipping ethtool installation."
+    fi
+    echo "============================================="
+    echo ""
+fi
+
 echo "[9/7] Tailscale Initial Setup..."
 printf "Do you want to run 'tailscale up' now to authenticate? [y/N]: "
 read RUN_UP
@@ -236,7 +259,20 @@ read RUN_UP
 if [ "$RUN_UP" = "y" ] || [ "$RUN_UP" = "Y" ]; then
     echo "Running 'tailscale up'..."
     tailscale up
+    
+    echo ""
+    echo "Tailscale is now up!"
+    echo "If you need to enable specific features (flags) later,"
+    echo "please use the 'tailscale set [flags]' command."
+    echo ""
+    echo "For more details, please refer to the official documentation:"
+    echo "https://tailscale.com/kb/1080/cli#set"
 else
+    echo ""
     echo "Skipping authentication."
     echo "You can run 'tailscale up' manually later."
 fi
+
+echo ""
+echo "=== Setup Complete! ==="
+echo ""

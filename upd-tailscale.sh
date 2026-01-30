@@ -7,13 +7,10 @@ UP_FLAGS="--accept-routes"
 # ---------------------
 
 # 1. Update package list
-# Essential to check for updates
 opkg update > /dev/null 2>&1
 
 # 2. Get version information
-# Installed version
 INSTALLED_VER=$(opkg list-installed $PACKAGE | awk '{print $3}')
-# Latest version on repository
 CANDIDATE_VER=$(opkg list $PACKAGE | awk '{print $3}' | head -n 1)
 
 # Do nothing if not installed
@@ -26,7 +23,6 @@ if [ "$INSTALLED_VER" != "$CANDIDATE_VER" ] && [ -n "$CANDIDATE_VER" ]; then
     logger -t "$LOG_TAG" "New version found: $CANDIDATE_VER (Current: $INSTALLED_VER). Starting update..."
 
     # 4. Safe update (Remove -> Install to avoid Flash space shortage)
-    # Configuration files will be preserved
     opkg remove $PACKAGE
     opkg install $PACKAGE
 
