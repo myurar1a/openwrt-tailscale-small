@@ -17,6 +17,6 @@ Description: Small Tailscale.
  and cloud instances. Even when separated by firewalls or subnets.
 Installed-Size: 4387714
 Filename: tailscale_1.94.1_arm_arm926ej-s.ipk
-Size: 4388832
-SHA256sum: 1e675ce80b9fdbf9c8687cdcae43d76351758ae079c6a1d9a85eddcf092b8ec6
+Size: 4388834
+SHA256sum: 6c7317c24fe8201381e7376298bb76fc4855203e94161580b7fadb0b5510b1b3
 
