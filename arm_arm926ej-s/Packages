@@ -1,6 +1,6 @@
 
 Package: tailscale
-Version: 1.94.1
+Version: 1.94.2
 Depends: libc, ca-bundle, kmod-tun
 Source: https://github.com/tailscale/tailscale
 SourceName: tailscale
@@ -15,8 +15,8 @@ Architecture: arm_arm926ej-s
 Description: Small Tailscale. 
  It creates a secure network between your servers, computers,
  and cloud instances. Even when separated by firewalls or subnets.
-Installed-Size: 4387714
-Filename: tailscale_1.94.1_arm_arm926ej-s.ipk
-Size: 4388834
-SHA256sum: 6c7317c24fe8201381e7376298bb76fc4855203e94161580b7fadb0b5510b1b3
+Installed-Size: 4388118
+Filename: tailscale_1.94.2_arm_arm926ej-s.ipk
+Size: 4389191
+SHA256sum: 817b18c8355c7c0e519f5ef0790198601f195fd6a1bcae16d9d5b4ae9488c97c
 

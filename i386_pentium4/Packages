@@ -1,6 +1,6 @@
 
 Package: tailscale
-Version: 1.94.1
+Version: 1.94.2
 Depends: libc, ca-bundle, kmod-tun
 Source: https://github.com/tailscale/tailscale
 SourceName: tailscale
@@ -15,8 +15,8 @@ Architecture: i386_pentium4
 Description: Small Tailscale. 
  It creates a secure network between your servers, computers,
  and cloud instances. Even when separated by firewalls or subnets.
-Installed-Size: 5067550
-Filename: tailscale_1.94.1_i386_pentium4.ipk
-Size: 5068637
-SHA256sum: bb2bea81c13b1868216488311840bd36e628f953ba4f7484128e249da7841cfa
+Installed-Size: 4668538
+Filename: tailscale_1.94.2_i386_pentium4.ipk
+Size: 4669461
+SHA256sum: 4fffec8a9833b514c714038199b3f8eb61465c89de19eab293f2109a7b2302ae
 

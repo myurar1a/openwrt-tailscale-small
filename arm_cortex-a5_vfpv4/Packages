@@ -1,6 +1,6 @@
 
 Package: tailscale
-Version: 1.94.1
+Version: 1.94.2
 Depends: libc, ca-bundle, kmod-tun
 Source: https://github.com/tailscale/tailscale
 SourceName: tailscale
@@ -15,8 +15,8 @@ Architecture: arm_cortex-a5_vfpv4
 Description: Small Tailscale. 
  It creates a secure network between your servers, computers,
  and cloud instances. Even when separated by firewalls or subnets.
-Installed-Size: 4371870
-Filename: tailscale_1.94.1_arm_cortex-a5_vfpv4.ipk
-Size: 4372851
-SHA256sum: b1561730cf4a909180905cd514dba28efb3e0de3376f0d3afccee5213b3f8f93
+Installed-Size: 4378866
+Filename: tailscale_1.94.2_arm_cortex-a5_vfpv4.ipk
+Size: 4379913
+SHA256sum: 013e64a139c9486c9b208ed97d2045ff520241336f07f2b9c0876c134c7931e7
 
