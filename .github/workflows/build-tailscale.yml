@@ -421,10 +421,10 @@ jobs:
               if [ -d \"\$ARCH_DIR\" ] && ls \"\$ARCH_DIR\"/*.apk >/dev/null 2>&1; then
                 cd \"\$ARCH_DIR\"
                 echo \"Signing APKs in \$ARCH_DIR...\"
-                for APK in *.apk; do
+                # for APK in *.apk; do
                   # 未署名apkに署名を付加 (元のファイルを自動で上書きします)
                   # abuild-sign -q -k ../apk_key.rsa \"\$APK\"
-                done
+                # done
                 
                 echo \"Generating APK index for \$ARCH_DIR...\"
                 apk index -o APKINDEX.tar.gz *.apk
