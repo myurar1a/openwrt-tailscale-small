@@ -208,6 +208,7 @@ jobs:
             mkdir -p ipk_build/data/etc/init.d
             mkdir -p ipk_build/data/lib/upgrade/keep.d
             mkdir -p ipk_build/control
+            mkdir -p apk_build/control
             
             # --- data ---
             cp tailscale.combined ipk_build/data/usr/sbin/
@@ -266,7 +267,6 @@ jobs:
             cd ../..
 
             # 2. make apk metadata (.PKGINFO)
-            mkdir -p apk_build/control
             DATAHASH=$(sha256sum apk_build/data.tar.gz | awk '{print $1}')
             {
               echo "pkgname=tailscale"
