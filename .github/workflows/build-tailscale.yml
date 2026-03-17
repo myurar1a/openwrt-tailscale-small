@@ -222,6 +222,7 @@ jobs:
             chmod +x ipk_build/data/etc/init.d/tailscale
             
             # --- .ipk ---
+            echo "Building IPK for $ARCH..."
             # 1. build data.tar.gz
             cd ipk_build/data
             tar --numeric-owner --group=0 --owner=0 -czf ../data.tar.gz *
@@ -252,48 +253,52 @@ jobs:
             IPK_NAME="tailscale_${VERSION_NUM}_${ARCH}.ipk"
             tar --numeric-owner --group=0 --owner=0 -czf "$IPK_NAME" debian-binary control.tar.gz data.tar.gz
             
-            # 生成物を退避
+            # .ipk を artifacts ディレクトリへ退避
             mv "$IPK_NAME" ../artifacts/
             cd ..
 
             # --- .apk ---
             echo "Building APK for $ARCH..."
             
-            # apk用の作業ディレクトリ作成
-            mkdir -p apk_build/root
-            
-            # 1. copy data
-            cp -a ipk_build/data/* apk_build/root/
+            # 1. build data.tar.gz
+            cd ipk_build/data
+            tar --format=ustar --numeric-owner --group=0 --owner=0 -czf ../../apk_build/data.tar.gz *
+            cd ../..
 
             # 2. make apk metadata (.PKGINFO)
+            mkdir -p apk_build/control
+            DATAHASH=$(sha256sum apk_build/data.tar.gz | awk '{print $1}')
             {
-              echo "pkgname = tailscale"
-              echo "pkgver = ${VERSION_NUM}-r1"
-              echo "pkgdesc = Auto-generated small build for OpenWrt."
-              echo "url = https://github.com/${{ github.repository }}"
-              echo "builddate = $(date +%s)"
-              echo "packager = GitHub Actions <github-actions[bot]@users.noreply.github.com>"
-              echo "size = $SIZE"
-              echo "arch = $ARCH"
-            } > apk_build/root/.PKGINFO
+              echo "pkgname=tailscale"
+              echo "pkgver=${VERSION_NUM}-r1"
+              echo "pkgdesc=Auto-generated small build for OpenWrt."
+              echo "url=https://github.com/${{ github.repository }}"
+              echo "builddate=$(date +%s)"
+              echo "packager=GitHub Actions <github-actions[bot]@users.noreply.github.com>"
+              echo "size=$SIZE"
+              echo "arch=$ARCH"
+              echo "datahash=$DATAHASH"
+            } > apk_build/control/.PKGINFO
 
             # 3. copy install scripts
-            cp my-repo/openwrt/control/postinst apk_build/root/.post-install
-            cp my-repo/openwrt/control/postinst apk_build/root/.post-upgrade
-            cp my-repo/openwrt/control/prerm apk_build/root/.pre-deinstall
-            cp my-repo/openwrt/control/prerm apk_build/root/.pre-upgrade
-            chmod 755 apk_build/root/.post-* apk_build/root/.pre-*
+            cp my-repo/openwrt/control/postinst apk_build/control/.post-install
+            cp my-repo/openwrt/control/postinst apk_build/control/.post-upgrade
+            cp my-repo/openwrt/control/prerm apk_build/control/.pre-deinstall
+            cp my-repo/openwrt/control/prerm apk_build/control/.pre-upgrade
+            chmod 755 apk_build/control/.post-* apk_build/control/.pre-*
             
-            # --- .ipk packaging (unsign) ---
-            cd apk_build/root
+            # 4. build control.tar.gz
+            cd apk_build/control
+            # .PKGINFO を最初に指定し、--format=ustar を使用する
+            tar --format=ustar --numeric-owner --group=0 --owner=0 -czf ../control.tar.gz .PKGINFO .post-install .post-upgrade .pre-deinstall .pre-upgrade
+            cd ../..
+            
+            # --- .apk packaging (unsign) ---
+            cd apk_build
             APK_NAME="tailscale_${VERSION_NUM}_${ARCH}.apk"
+            cat control.tar.gz data.tar.gz > "$APK_NAME"
             
-            # .PKGINFO などの隠しファイルと、通常のディレクトリ(*)をすべて含めて圧縮
-            # (※ apkフォーマットの推奨仕様に則り、.PKGINFO がアーカイブの先頭に来るように列挙します)
-            tar --format=ustar --numeric-owner --group=0 --owner=0 -czf "../$APK_NAME" .PKGINFO .post-install .post-upgrade .pre-deinstall .pre-upgrade *
-            
-            # 生成物を artifacts ディレクトリへ退避
-            cd ..
+            # .apk を artifacts ディレクトリへ退避
             mv "$APK_NAME" ../artifacts/
             cd ..
           done
