@@ -425,7 +425,7 @@ jobs:
             
             # Copy pubkey to trusted keys dir
             mkdir -p /etc/apk/keys
-            cp /work/cert/apk_key.rsa.pub /etc/apk/keys/
+            cp /cert/apk_key.rsa.pub /etc/apk/keys/
 
             for ARCH_DIR in */ ; do
               if [ -d \"\$ARCH_DIR\" ] && [ \"\$ARCH_DIR\" != \"cert/\" ] && ls \"\$ARCH_DIR\"/*.apk >/dev/null 2>&1; then
