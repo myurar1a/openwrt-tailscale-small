@@ -17,6 +17,6 @@ Description: Small Tailscale.
  and cloud instances. Even when separated by firewalls or subnets.
 Installed-Size: 4269306
 Filename: tailscale_1.94.2_mips_4kec.ipk
-Size: 4269757
-SHA256sum: 428fbc2cc43ed04d6028af5cfbb7ea5cd27a51974572c457619b737436751c61
+Size: 4269760
+SHA256sum: 2d4c29e749f8849fced54374d8fb79a58c84c4312e48934871fdbacf1e4c2f1e
 
