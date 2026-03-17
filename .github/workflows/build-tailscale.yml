@@ -423,7 +423,7 @@ jobs:
                 echo \"Signing APKs in \$ARCH_DIR...\"
                 for APK in *.apk; do
                   # 未署名apkに署名を付加 (元のファイルを自動で上書きします)
-                  abuild-sign -q -k ../apk_key.rsa \"\$APK\"
+                  # abuild-sign -q -k ../apk_key.rsa \"\$APK\"
                 done
                 
                 echo \"Generating APK index for \$ARCH_DIR...\"
