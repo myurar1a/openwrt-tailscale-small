@@ -427,9 +427,10 @@ jobs:
             # Install abuild
             apk add --no-cache abuild
             
-            # Copy pubkey to trusted keys dir
+            # Copy pubkey
             mkdir -p /etc/apk/keys
             cp /cert/apk_key.rsa.pub /etc/apk/keys/
+            cp /cert/apk_key.rsa.pub /work/
 
             for ARCH_DIR in */ ; do
               if [ -d \"\$ARCH_DIR\" ] && [ \"\$ARCH_DIR\" != \"cert/\" ] && ls \"\$ARCH_DIR\"/*.apk >/dev/null 2>&1; then
