@@ -17,6 +17,6 @@ Description: Small Tailscale.
  and cloud instances. Even when separated by firewalls or subnets.
 Installed-Size: 4401662
 Filename: tailscale_1.96.2_powerpc64_e5500.ipk
-Size: 4402739
-SHA256sum: 986c7382a4fd1760422f06a9cbceb13301bd4994c559e72ed79423afceb79661
+Size: 4402678
+SHA256sum: f9aeb45f8333134e5a6ec558476aa27c0a05102e29e28733961fbe209e35eb31
 
