@@ -264,22 +264,33 @@ jobs:
             echo "Building APK for $ARCH..."
             
             # 1. build data.tar.gz
+            # --format=posix + --pax-option で pax ヘッダを生成（abuild-tar --hash の前提条件）
+            # abuild-tar は Alpine 専用バイナリのため stdin/stdout パイプ経由で docker 内で実行
             cd ipk_build/data
-            tar --format=ustar --numeric-owner --group=0 --owner=0 -czf ../../apk_build/data.tar.gz *
+            find . -mindepth 1 -print0 | LC_ALL=C sort -z \
+              | tar --format=posix \
+                    --pax-option=exthdr.name=%d/PaxHeaders/%f,atime:=0,ctime:=0 \
+                    --numeric-owner --owner=0 --group=0 \
+                    --no-recursion --null -f - -c -T - \
+              | docker run --rm -i alpine:latest sh -c \
+                  'apk add --no-cache abuild >/dev/null 2>&1 && abuild-tar --hash' \
+              | gzip -n -9 > ../../apk_build/data.tar.gz
             cd ../..
 
             # 2. make apk metadata (.PKGINFO)
-            DATAHASH=$(sha256sum apk_build/data.tar.gz | awk '{print $1}')
+            # フィールド形式は "key = value"（スペース必須）
+            # datahash は data.tar.gz 生成後に計算して末尾に追記
             {
-              echo "pkgname=tailscale"
-              echo "pkgver=${VERSION_NUM}-r1"
-              echo "pkgdesc=Auto-generated small build for OpenWrt."
-              echo "url=https://github.com/${{ github.repository }}"
-              echo "builddate=$(date +%s)"
-              echo "packager=GitHub Actions <github-actions[bot]@users.noreply.github.com>"
-              echo "size=$SIZE"
-              echo "arch=$ARCH"
-              echo "datahash=$DATAHASH"
+              echo "pkgname = tailscale"
+              echo "pkgver = ${VERSION_NUM}-r1"
+              echo "pkgdesc = Auto-generated small build for OpenWrt."
+              echo "url = https://github.com/${{ github.repository }}"
+              echo "builddate = $(date +%s)"
+              echo "packager = GitHub Actions <github-actions[bot]@users.noreply.github.com>"
+              echo "license = BSD-3-Clause"
+              echo "size = $(du -sk ipk_build/data | awk '{ print $1 * 1024 }')"
+              echo "arch = $ARCH"
+              echo "datahash = $(sha256sum apk_build/data.tar.gz | awk '{print $1}')"
             } > apk_build/control/.PKGINFO
 
             # 3. copy install scripts
@@ -290,24 +301,40 @@ jobs:
             chmod 755 apk_build/control/.post-* apk_build/control/.pre-*
             
             # 4. build control.tar.gz
+            # abuild-tar --cut: EOF レコードを除去（署名 prepend のため）
             cd apk_build/control
-            # .PKGINFO を最初に指定し、--format=ustar を使用する
-            tar --format=ustar --numeric-owner --group=0 --owner=0 -czf ../control.tar.gz .PKGINFO .post-install .post-upgrade .pre-deinstall .pre-upgrade
+            SCRIPTS=$(ls -1 .post-* .pre-* 2>/dev/null || true)
+            printf "%s\0" .PKGINFO $SCRIPTS \
+              | tar --format=posix \
+                    --pax-option=exthdr.name=%d/PaxHeaders/%f,atime:=0,ctime:=0 \
+                    --numeric-owner --owner=0 --group=0 \
+                    --no-recursion --null -f - -c -T - \
+              | docker run --rm -i alpine:latest sh -c \
+                  'apk add --no-cache abuild >/dev/null 2>&1 && abuild-tar --cut' \
+              | gzip -n -9 > ../control.tar.gz
             cd ../..
             
-            # 5. sign control.tar.gz (APK v2 signature)
+            # 5. sign control.tar.gz
             echo "$APK_KEY" > apk_key.rsa
             SIGN_FILE=".SIGN.RSA.apk_key.rsa.pub"
             openssl dgst -sha1 -sign apk_key.rsa -out apk_build/${SIGN_FILE} apk_build/control.tar.gz
 
             # 6. build sign.tar.gz
+            # abuild-sign の実装どおり apk_tar | abuild-tar --cut | gzip を再現
             cd apk_build
-            tar --format=ustar --numeric-owner --group=0 --owner=0 -czf sign.tar.gz ${SIGN_FILE}
+            printf "%s\0" ${SIGN_FILE} \
+              | tar --format=posix \
+                    --pax-option=exthdr.name=%d/PaxHeaders/%f,atime:=0,ctime:=0 \
+                    --numeric-owner --owner=0 --group=0 \
+                    --no-recursion --null -f - -c -T - \
+              | docker run --rm -i alpine:latest sh -c \
+                  'apk add --no-cache abuild >/dev/null 2>&1 && abuild-tar --cut' \
+              | gzip -n -9 > sign.tar.gz
             
             # --- .apk packaging (signed) ---
             APK_NAME="tailscale_${VERSION_NUM}_${ARCH}.apk"
             cat sign.tar.gz control.tar.gz data.tar.gz > "$APK_NAME"
-            
+
             # .apk を artifacts ディレクトリへ退避し、一時ファイルを削除
             rm -f ../apk_key.rsa ${SIGN_FILE} sign.tar.gz
             mv "$APK_NAME" ../artifacts/
