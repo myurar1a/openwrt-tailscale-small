@@ -17,6 +17,6 @@ Description: Small Tailscale.
  and cloud instances. Even when separated by firewalls or subnets.
 Installed-Size: 16779048
 Filename: tailscale_1.96.3_riscv64_riscv64.ipk
-Size: 6726687
-SHA256sum: 448da021d1c826f768cf28ddbb5d0cb64aa7dadafe808b9f05ebb05732ccd863
+Size: 6726722
+SHA256sum: 9d6b13764a8c774b41cf7661585ab70edec77cb68243c43152acfcc22f26a206
 
