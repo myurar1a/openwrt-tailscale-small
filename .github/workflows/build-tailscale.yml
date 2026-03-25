@@ -253,7 +253,7 @@ jobs:
             # --- .ipk packaging (unsign) ---
             echo "2.0" > ipk_build/debian-binary
             cd ipk_build
-            IPK_NAME="tailscale_${VERSION_NUM}_${ARCH}.ipk"
+            IPK_NAME="tailscale_${VERSION_NUM}-r1_${ARCH}.ipk"
             tar --numeric-owner --group=0 --owner=0 -czf "$IPK_NAME" debian-binary control.tar.gz data.tar.gz
             
             # .ipk を artifacts ディレクトリへ退避
@@ -332,7 +332,7 @@ jobs:
               | gzip -n -9 > sign.tar.gz
             
             # --- .apk packaging (signed) ---
-            APK_NAME="tailscale_${VERSION_NUM}-r1_${ARCH}.apk"
+            APK_NAME="tailscale-${VERSION_NUM}-r1_${ARCH}.apk"
             cat sign.tar.gz control.tar.gz data.tar.gz > "$APK_NAME"
 
             # .apk を artifacts ディレクトリへ退避し、一時ファイルを削除
@@ -373,7 +373,7 @@ jobs:
             
             **Build Tags:** `${{ needs.init.outputs.build_tags }}`
             **Build Flags:** `--extra-small --box`
-            **Compression:** UPX --best --lzma
+            **Compression:** `upx --best --lzma`
           files: |
             artifacts/*.ipk
             artifacts/*.apk
@@ -417,21 +417,33 @@ jobs:
           APK_KEY: ${{ secrets.APK_PRIVATE_KEY }}
         run: |
           cd repo-page
-          echo "$USIGN_KEY" > key.sec
-          echo "$APK_KEY" > apk_key.rsa
-          
+
+          # clean
           for ARCH_DIR in repo-page/*/; do
-            [ -d "$ARCH_DIR" ] && rm -f "$ARCH_DIR"*.ipk "$ARCH_DIR"*.apk
+            [ -d "$ARCH_DIR" ] && rm -f "$ARCH_DIR"*\
           done
 
-          # ipkとapkを配置
-          find ../artifacts -type f \( -name "*.ipk" -o -name "*.apk" \) | while read PKG; do
+          echo "$USIGN_KEY" > usign_key.sec
+          echo "$APK_KEY" > apk_key.rsa
+
+          # ipk 配置
+          find ../artifacts -type f \( -name "*.ipk" \) | while read PKG; do
             echo "Processing $PKG..."
-            # ファイル名からアーキテクチャ名を抽出 (例: tailscale_1.50.0_x86_64.apk -> x86_64)
-            ARCH_NAME=$(basename "$PKG" | sed -E 's/^tailscale_[^_]+_([^\.]+)\.(ipk|apk)$/\1/')
+            # ファイル名からアーキテクチャ名を抽出 (例: tailscale_1.96.3-r1_x86_64.ipk -> x86_64)
+            ARCH_NAME=$(basename "$PKG" | sed -E 's/^tailscale_[^_]+_([^\.]+)\.ipk$/\1/')
             mkdir -p "$ARCH_NAME"
             rm -f "$ARCH_NAME"/$(basename "$PKG")
             cp "$PKG" "$ARCH_NAME"/
+          done
+
+          # apk 配置
+          find ../artifacts -type f \( -name "*.apk" \) | while read PKG; do
+            echo "Processing $PKG..."
+            # ファイル名からアーキテクチャ名を抽出 (例: tailscale-1.96.3-r1_x86_64.apk > x86_64)
+            ARCH_NAME=$(basename "$PKG" | sed -E 's/^tailscale-[^_]+_([^\.]+)\.apk$/\1/')
+            # 配置時ファイル名
+            NEW_NAME=$(basename "$PKG" | sed 's/_${ARCH_NAME}//')
+            cp "$PKG" "$ARCH_NAME"/"$NEW_NAME"
           done
           
           # --- ipk のインデックス生成と署名 (OpenWrt rootfsコンテナを使用) ---
@@ -454,7 +466,7 @@ jobs:
               # Sign ipk
               echo "Signing Packages (IPK)..."
               docker run --rm -v "$GITHUB_WORKSPACE/repo-page":/work -w "/work/$ARCH_DIR" openwrt/rootfs:x86-64-24.10.5 \
-                usign -S -m Packages -s ../key.sec -x Packages.sig
+                usign -S -m Packages -s ../usign_key.sec -x Packages.sig
               rm Packages
               cd ..
             fi
@@ -498,7 +510,7 @@ jobs:
             fi
           done
           
-          rm -f key.sec apk_key.rsa apk_key.rsa.pub
+          rm -f usign_key.sec apk_key.rsa apk_key.rsa.pub
 
       - name: Deploy to GitHub Pages
         working-directory: repo-page
@@ -512,4 +524,4 @@ jobs:
 
           # 強制プッシュで履歴を上書きしないとリポジトリが肥大化するため注意
           # 容量節約なら --force 推奨
-          git push origin HEAD:gh-pages
+          git push --force origin HEAD:gh-pages
