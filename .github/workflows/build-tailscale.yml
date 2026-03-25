@@ -420,7 +420,7 @@ jobs:
 
           # clean
           for ARCH_DIR in repo-page/*/; do
-            [ -d "$ARCH_DIR" ] && rm -f "$ARCH_DIR"*\
+            [ -d "$ARCH_DIR" ] && rm -f "$ARCH_DIR"*
           done
 
           echo "$USIGN_KEY" > usign_key.sec
