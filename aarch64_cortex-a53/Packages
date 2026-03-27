@@ -1,0 +1,22 @@
+
+Package: tailscale
+Version: 1.96.4
+Depends: libc, ca-bundle, kmod-tun
+Source: https://github.com/tailscale/tailscale
+SourceName: tailscale
+License: BSD-3-Clause
+LicenseFiles: LICENSE
+Section: net
+SourceDateEpoch: 1767277472
+URL: https://tailscale.com
+CPE-ID: cpe:/a:tailscale:tailscale
+Maintainer: myurar1a <megasirome181@gmail.com>
+Architecture: aarch64_cortex-a53
+Description: Small Tailscale. 
+ It creates a secure network between your servers, computers,
+ and cloud instances. Even when separated by firewalls or subnets.
+Installed-Size: 4467758
+Filename: tailscale_1.96.4_aarch64_cortex-a53.ipk
+Size: 4468926
+SHA256sum: b93d5fe4c6f37d63ca908c35bc7554e9165ceebd4628630a2cb2a1100cb99602
+

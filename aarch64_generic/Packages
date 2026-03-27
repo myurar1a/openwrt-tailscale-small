@@ -1,0 +1,22 @@
+
+Package: tailscale
+Version: 1.96.4
+Depends: libc, ca-bundle, kmod-tun
+Source: https://github.com/tailscale/tailscale
+SourceName: tailscale
+License: BSD-3-Clause
+LicenseFiles: LICENSE
+Section: net
+SourceDateEpoch: 1767277472
+URL: https://tailscale.com
+CPE-ID: cpe:/a:tailscale:tailscale
+Maintainer: myurar1a <megasirome181@gmail.com>
+Architecture: aarch64_generic
+Description: Small Tailscale. 
+ It creates a secure network between your servers, computers,
+ and cloud instances. Even when separated by firewalls or subnets.
+Installed-Size: 4467758
+Filename: tailscale_1.96.4_aarch64_generic.ipk
+Size: 4468922
+SHA256sum: e52356cb398f361551a0511f008482d241933a53462cdce800cf5d23bf5e2b6c
+
