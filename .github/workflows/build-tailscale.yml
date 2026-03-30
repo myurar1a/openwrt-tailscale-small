@@ -272,6 +272,7 @@ jobs:
                     --pax-option=exthdr.name=%d/PaxHeaders/%f,atime:=0,ctime:=0 \
                     --numeric-owner --owner=0 --group=0 \
                     --no-recursion --null -f - -c -T - \
+                    --transform='s|^\./||' \
               | docker run --rm -i alpine:latest sh -c \
                   'apk add --no-cache abuild >/dev/null 2>&1 && abuild-tar --hash' \
               | gzip -n -9 > ../../apk_build/data.tar.gz
@@ -294,10 +295,10 @@ jobs:
             } > apk_build/control/.PKGINFO
 
             # 3. copy install scripts
-            cp my-repo/openwrt/control/postinst apk_build/control/.post-install
-            cp my-repo/openwrt/control/postinst apk_build/control/.post-upgrade
-            cp my-repo/openwrt/control/prerm apk_build/control/.pre-deinstall
-            cp my-repo/openwrt/control/prerm apk_build/control/.pre-upgrade
+            cp my-repo/openwrt/control/.post-install apk_build/control/.post-install
+            cp my-repo/openwrt/control/.post-upgrade apk_build/control/.post-upgrade
+            cp my-repo/openwrt/control/.pre-deinstall apk_build/control/.pre-deinstall
+            cp my-repo/openwrt/control/.pre-upgrade apk_build/control/.pre-upgrade
             chmod 755 apk_build/control/.post-* apk_build/control/.pre-*
             
             # 4. build control.tar.gz
