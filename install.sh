@@ -112,8 +112,10 @@ do_uninstall() {
     if [ "$PKG_MANAGER" = "apk" ]; then
         rm -f /etc/apk/keys/myurar1a-repo.rsa.pub
         rm -f /etc/apk/repositories.d/custom_tailscale.list
+        rm -f /etc/apk/repositories.d/tailscale-lite.list
     else
         sed -i '/custom_tailscale/d' /etc/opkg/customfeeds.conf 2>/dev/null || true
+        sed -i '/tailscale-lite/d' /etc/opkg/customfeeds.conf 2>/dev/null || true
     fi
     print_success "Repository config and key removed."
 
@@ -315,8 +317,11 @@ fi
 # --- Step 5 ---
 print_header "[5/8] Configuring Repository"
 if [ "$PKG_MANAGER" = "apk" ]; then
-    FEED_CONF="/etc/apk/repositories.d/custom_tailscale.list"
+    FEED_CONF="/etc/apk/repositories.d/tailscale-lite.list"
     mkdir -p /etc/apk/repositories.d
+    if [ -f "/etc/apk/repositories.d/custom_tailscale.list" ]; then
+        rm -f /etc/apk/repositories.d/custom_tailscale.list
+    fi
     if [ ! -f "$FEED_CONF" ] || ! grep -q "$REPO_URL" "$FEED_CONF"; then
         echo "$REPO_URL" >> "$FEED_CONF"
         print_success "Repository added to $FEED_CONF"
@@ -325,8 +330,11 @@ if [ "$PKG_MANAGER" = "apk" ]; then
     fi
 else
     FEED_CONF="/etc/opkg/customfeeds.conf"
-    if ! grep -q "custom_tailscale" "$FEED_CONF"; then
-        echo "src/gz custom_tailscale ${REPO_URL}/${ARCH}" >> "$FEED_CONF"
+    if grep -q "custom_tailscale" "$FEED_CONF"; then
+        sed -i '/custom_tailscale/d' /etc/opkg/customfeeds.conf 2>/dev/null || true
+    fi
+    if ! grep -q "tailscale-lite" "$FEED_CONF"; then
+        echo "src/gz tailscale-lite ${REPO_URL}/${ARCH}" >> "$FEED_CONF"
         print_success "Repository added to customfeeds.conf"
     else
         print_info "Repository already configured."
