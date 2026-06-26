@@ -485,7 +485,7 @@ jobs:
                 cd /tmp
                 tar xzf /work/\"\$ARCH_NAME\"/APKINDEX.tar.gz
                 sed -i \"s|^F:\(.*\)$|F:${RELEASE_BASE_URL}/\1|\" APKINDEX
-                tar czf /work/\"\$ARCH_NAME\"/APKINDEX.tar.gz APKINDEX DESCRIPTION
+                tar czf /work/"$ARCH_NAME"/APKINDEX.tar.gz APKINDEX
                 cd /work
 
                 abuild-sign -q -k /work/myurar1a-repo.rsa /work/\"\$ARCH_NAME\"/APKINDEX.tar.gz
