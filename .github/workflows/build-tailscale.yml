@@ -415,6 +415,7 @@ jobs:
         env:
           USIGN_KEY: ${{ secrets.USIGN_PRIVATE_KEY }}
           APK_KEY: ${{ secrets.APK_PRIVATE_KEY }}
+          RELEASE_BASE_URL: "https://github.com/${{ github.repository }}/releases/download/v${{ needs.init.outputs.version }}"
         run: |
           cd repo-page
 
@@ -426,89 +427,80 @@ jobs:
           echo "$USIGN_KEY" > usign_key.sec
           echo "$APK_KEY" > myurar1a-repo.rsa
 
-          # ipk 配置
-          find ../artifacts -type f \( -name "*.ipk" \) | while read PKG; do
+          # --- ipk: インデックス生成 ---
+          find ../artifacts -type f -name "*.ipk" | while read PKG; do
             echo "Processing $PKG..."
-            # ファイル名からアーキテクチャ名を抽出 (例: tailscale_1.96.3-r1_x86_64.ipk -> x86_64)
-            ARCH_NAME=$(basename "$PKG" | sed -E 's/^tailscale_[^_]+_([^\.]+)\.ipk$/\1/')
+            BASENAME=$(basename "$PKG")
+            ARCH_NAME=$(echo "$BASENAME" | sed -E 's/^tailscale_[^_]+_([^\.]+)\.ipk$/\1/')
             mkdir -p "$ARCH_NAME"
-            cp "$PKG" "$ARCH_NAME"/
+
+            tar -xzOf "$PKG" control.tar.gz | tar xzO control >> "$ARCH_NAME/Packages"
+            echo "Filename: ${RELEASE_BASE_URL}/${BASENAME}" >> "$ARCH_NAME/Packages"
+            echo "Size: $(stat -c%s "$PKG")" >> "$ARCH_NAME/Packages"
+            echo "SHA256sum: $(sha256sum "$PKG" | cut -d' ' -f1)" >> "$ARCH_NAME/Packages"
+            echo "" >> "$ARCH_NAME/Packages"
           done
 
-          # apk 配置
-          find ../artifacts -type f \( -name "*.apk" \) | while read PKG; do
-            echo "Processing $PKG..."
-            # ファイル名からアーキテクチャ名を抽出 (例: tailscale-1.96.3-r1_x86_64.apk > x86_64)
-            ARCH_NAME=$(basename "$PKG" | sed -E 's/^tailscale-[^_]+_([^\.]+)\.apk$/\1/')
-            # 配置時ファイル名
-            NEW_NAME=$(basename "$PKG" | sed "s/_${ARCH_NAME}//")
-            cp "$PKG" "$ARCH_NAME"/"$NEW_NAME"
-          done
-          
-          # --- ipk のインデックス生成と署名 (OpenWrt rootfsコンテナを使用) ---
+          # --- ipk: 署名 (OpenWrt rootfsコンテナを使用) ---
           for ARCH_DIR in */; do
-            if [ -d "$ARCH_DIR" ] && ls "$ARCH_DIR"/*.ipk >/dev/null 2>&1; then
-              cd "$ARCH_DIR"
-
-              # Generate index
-              echo "Generating IPK index for $ARCH_DIR..."
-              echo "" > Packages
-              for IPK in *.ipk; do
-                tar -xzOf "$IPK" control.tar.gz | tar xzO control >> Packages
-                echo "Filename: $IPK" >> Packages
-                echo "Size: $(stat -c%s "$IPK")" >> Packages
-                echo "SHA256sum: $(sha256sum "$IPK" | cut -d' ' -f1)" >> Packages
-                echo "" >> Packages
-              done
-              gzip -k -f Packages
-
-              # Sign ipk
-              echo "Signing Packages (IPK)..."
-              docker run --rm -v "$GITHUB_WORKSPACE/repo-page":/work -w "/work/$ARCH_DIR" openwrt/rootfs:x86-64-24.10.5 \
-                usign -S -m Packages -s ../usign_key.sec -x Packages.sig
-              rm Packages
-              cd ..
-            fi
+            [ -f "${ARCH_DIR}Packages" ] || continue
+            gzip -k -f "${ARCH_DIR}Packages"
+            # Sign ipk
+            echo "Signing Packages (IPK)..."
+            docker run --rm \
+              -v "$GITHUB_WORKSPACE/repo-page":/work \
+              -w "/work/${ARCH_DIR}" \
+              openwrt/rootfs:x86-64-24.10.5 \
+              usign -S -m Packages -s ../usign_key.sec -x Packages.sig
+            rm "${ARCH_DIR}Packages"
           done
 
-          # --- apk のインデックス生成 ---
+          # --- apk: インデックス生成 ---
           docker run --rm \
             -v "$GITHUB_WORKSPACE/repo-page":/work \
+            -v "$GITHUB_WORKSPACE/artifacts":/artifacts:ro \
             -v "$GITHUB_WORKSPACE/cert":/cert:ro \
             -w /work \
             alpine:latest sh -c "
 
             # Install abuild
-            apk add --no-cache abuild
-            
-            # Copy pubkey
-            mkdir -p /etc/apk/keys
-            cp /cert/apk_key.rsa.pub /etc/apk/keys/myurar1a-repo.rsa.pub
-            cp /cert/apk_key.rsa.pub /work/myurar1a-repo.rsa.pub
+              apk add --no-cache abuild
 
-            for ARCH_DIR in */ ; do
-              if [ -d \"\$ARCH_DIR\" ] && [ \"\$ARCH_DIR\" != \"cert/\" ] && ls \"\$ARCH_DIR\"/*.apk >/dev/null 2>&1; then
-                cd \"\$ARCH_DIR\"
-                
+            # Copy pubkey
+              mkdir -p /etc/apk/keys
+              cp /cert/apk_key.rsa.pub /etc/apk/keys/myurar1a-repo.rsa.pub
+              cp /cert/apk_key.rsa.pub /work/myurar1a-repo.rsa.pub
+
+              find /artifacts -type f -name '*.apk' | while read PKG; do
+                BASENAME=\$(basename \"\$PKG\")
+                ARCH_NAME=\$(echo \"\$BASENAME\" | sed -E 's/^tailscale-[^_]+_([^\.]+)\.apk$/\1/')
+                NEW_NAME=\$(echo \"\$BASENAME\" | sed \"s/_\${ARCH_NAME}//\")
+                mkdir -p /work/\"\$ARCH_NAME\"
+
                 # Generate index
-                echo \"Generating APK index for \$ARCH_DIR...\"
-                apk index -o APKINDEX.tar.gz *.apk
-                abuild-sign -q -k ../myurar1a-repo.rsa APKINDEX.tar.gz
-                cd ..
-              fi
-            done
-          "
+                echo \"Generating APK index for \$ARCH_NAME...\"
+                apk index -o /work/\"\$ARCH_NAME\"/APKINDEX.tar.gz \"\$PKG\"
+
+                # APKINDEX 内の Filename を Releases URL に書き換え
+                cd /tmp
+                tar xzf /work/\"\$ARCH_NAME\"/APKINDEX.tar.gz
+                sed -i \"s|^F:\(.*\)$|F:${RELEASE_BASE_URL}/\1|\" APKINDEX
+                tar czf /work/\"\$ARCH_NAME\"/APKINDEX.tar.gz APKINDEX DESCRIPTION
+                cd /work
+
+                abuild-sign -q -k /work/myurar1a-repo.rsa /work/\"\$ARCH_NAME\"/APKINDEX.tar.gz
+              done
+            "
 
           # 不要な空ディレクトリがあれば削除
           for ARCH_DIR in */; do
-            if [ -d "$ARCH_DIR" ]; then
-              if ! ls "$ARCH_DIR"/*.ipk >/dev/null 2>&1 && ! ls "$ARCH_DIR"/*.apk >/dev/null 2>&1; then
-                echo "Skipping and removing $ARCH_DIR (no packages found)"
-                rm -rf "$ARCH_DIR"
-              fi
+            [ -d "$ARCH_DIR" ] || continue
+            if ! ls "$ARCH_DIR"* >/dev/null 2>&1; then
+              echo "Removing empty $ARCH_DIR"
+              rm -rf "$ARCH_DIR"
             fi
           done
-          
+
           rm -f usign_key.sec myurar1a-repo.rsa myurar1a-repo.rsa.pub
 
       - name: Deploy to GitHub Pages
@@ -520,7 +512,4 @@ jobs:
 
           # 変更がない場合のエラー回避
           git commit -m "Update repo ${{ needs.init.outputs.version }}" || echo "No changes to commit"
-
-          # 強制プッシュで履歴を上書きしないとリポジトリが肥大化するため注意
-          # 容量節約なら --force 推奨
-          git push --force origin HEAD:gh-pages
+          git push origin HEAD:gh-pages
