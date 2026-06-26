@@ -484,6 +484,9 @@ jobs:
                 # APKINDEX 内の Filename を Releases URL に書き換え
                 cd /tmp/"$ARCH_NAME"
                 tar xzf /work/"$ARCH_NAME"/APKINDEX.tar.gz
+                echo "=== APKINDEX raw ==="
+                cat APKINDEX
+                echo "===================="
                 sed -i "s|^F:.*$|F:${RELEASE_BASE_URL}/${BASENAME}|" APKINDEX
                 tar czf /work/"$ARCH_NAME"/APKINDEX.tar.gz APKINDEX
 
