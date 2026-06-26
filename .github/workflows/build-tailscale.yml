@@ -415,7 +415,7 @@ jobs:
         env:
           USIGN_KEY: ${{ secrets.USIGN_PRIVATE_KEY }}
           APK_KEY: ${{ secrets.APK_PRIVATE_KEY }}
-          RELEASE_BASE_URL: "https://github.com/${{ github.repository }}/releases/download/v${{ needs.init.outputs.version }}"
+          RELEASE_BASE_URL: "https://github.com/${{ github.repository }}/releases/download/${{ needs.init.outputs.version }}"
         run: |
           cd repo-page
 
@@ -461,7 +461,7 @@ jobs:
             -v "$GITHUB_WORKSPACE/artifacts":/artifacts:ro \
             -v "$GITHUB_WORKSPACE/cert":/cert:ro \
             -w /work \
-            alpine:latest sh -c "
+            alpine:latest sh -c '
 
             # Install abuild
               apk add --no-cache abuild
@@ -471,9 +471,9 @@ jobs:
               cp /cert/apk_key.rsa.pub /etc/apk/keys/myurar1a-repo.rsa.pub
               cp /cert/apk_key.rsa.pub /work/myurar1a-repo.rsa.pub
 
-              find /artifacts -type f -name '*.apk' | while read PKG; do
+              find /artifacts -type f -name "*.apk" | while read PKG; do
                 BASENAME=$(basename "$PKG")
-                ARCH_NAME=$(echo "$BASENAME" | sed -E 's/^tailscale-[^_]+_([^\.]+)\.apk$/\1/')
+                ARCH_NAME=$(echo "$BASENAME" | sed -E "s/^tailscale-[^_]+_([^\.]+)\.apk$/\1/")
                 mkdir -p /work/"$ARCH_NAME"
                 mkdir -p /tmp/"$ARCH_NAME"
 
@@ -484,13 +484,13 @@ jobs:
                 # APKINDEX 内の Filename を Releases URL に書き換え
                 cd /tmp/"$ARCH_NAME"
                 tar xzf /work/"$ARCH_NAME"/APKINDEX.tar.gz
-                sed -i "s|^F:\(.*\)$|F:${RELEASE_BASE_URL}/${BASENAME}|" APKINDEX
+                sed -i "s|^F:.*$|F:${RELEASE_BASE_URL}/${BASENAME}|" APKINDEX
                 tar czf /work/"$ARCH_NAME"/APKINDEX.tar.gz APKINDEX
 
                 cd /work/"$ARCH_NAME"
                 abuild-sign -q -k ../myurar1a-repo.rsa APKINDEX.tar.gz
               done
-            "
+            '
 
           # 不要な空ディレクトリがあれば削除
           for ARCH_DIR in */; do
