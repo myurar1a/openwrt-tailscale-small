@@ -474,16 +474,16 @@ jobs:
               find /artifacts -type f -name "*.apk" | while read PKG; do
                 BASENAME=$(basename "$PKG")
                 ARCH_NAME=$(echo "$BASENAME" | sed -E "s/^tailscale-[^_]+_([^\.]+)\.apk$/\1/")
-                mkdir -p /work/"$ARCH_NAME"
-                mkdir -p /tmp/"$ARCH_NAME"
+                mkdir -p /work/"$ARCH_NAME" /tmp/"$ARCH_NAME"
+                cd /tmp/"$ARCH_NAME"
 
-                # Generate index
-                echo \"Generating APK index for \$ARCH_NAME...\"
-                apk index -o /work/"$ARCH_NAME"/APKINDEX.tar.gz "$PKG"
+                echo "Generating APK index for $ARCH_NAME..."
+                ln -sf "$PKG" "$BASENAME"
+                apk index -o APKINDEX.tar.gz "$BASENAME"
+                rm "$BASENAME"
 
                 # APKINDEX 内の Filename を Releases URL に書き換え
-                cd /tmp/"$ARCH_NAME"
-                tar xzf /work/"$ARCH_NAME"/APKINDEX.tar.gz
+                tar xzf APKINDEX.tar.gz
                 echo "=== APKINDEX raw ==="
                 cat APKINDEX
                 echo "===================="
