@@ -460,6 +460,7 @@ jobs:
             -v "$GITHUB_WORKSPACE/repo-page":/work \
             -v "$GITHUB_WORKSPACE/artifacts":/artifacts:ro \
             -v "$GITHUB_WORKSPACE/cert":/cert:ro \
+            -e RELEASE_BASE_URL="$RELEASE_BASE_URL" \
             -w /work \
             alpine:latest sh -c '
 
@@ -486,7 +487,7 @@ jobs:
                 echo "=== Before APKINDEX raw ==="
                 cat APKINDEX
                 echo "==========================="
-                sed -i "s|^P:|F:${RELEASE_BASE_URL}/${BASENAME}\nP:|" APKINDEX
+                sed -i "s|^C:|F:${RELEASE_BASE_URL}/${BASENAME}\nC:|" APKINDEX
                 echo "=== After APKINDEX raw ==="
                 cat APKINDEX
                 echo "=========================="
