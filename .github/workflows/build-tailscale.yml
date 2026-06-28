@@ -412,13 +412,12 @@ jobs:
             echo "Processing $PKG..."
             BASENAME=$(basename "$PKG")
             
-            if [[ "$BASENAME" == *.ipk ]]; then
+            if [ "$BASENAME" == *.ipk ]; then
               # ファイル名からアーキテクチャ名を抽出 (例: tailscale_1.96.3-r1_x86_64.ipk -> x86_64)
               ARCH=$(echo "$BASENAME" | sed -E 's/^tailscale_[^_]+_(.+)\.ipk$/\1/')
               mkdir -p "$ARCH"
               cp "$PKG" "$ARCH"/
-
-            elif [[ "$BASENAME" == *.apk ]]; then
+            elif [ "$BASENAME" == *.apk ]; then
               # ファイル名からアーキテクチャ名を抽出 (例: tailscale-1.96.3-r1_x86_64.apk > x86_64)
               ARCH=$(echo "$BASENAME" | sed -E 's/^tailscale-[^_]+_(.+)\.apk$/\1/')
               # 配置時ファイル名
@@ -426,6 +425,7 @@ jobs:
               mkdir -p "$ARCH"
               cp "$PKG" "$ARCH/$NEW_NAME"
             fi
+          done
 
       - name: Generate Index and Sign
         env:
