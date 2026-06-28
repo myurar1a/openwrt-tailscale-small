@@ -503,17 +503,22 @@ jobs:
           done
 
       - name: Deploy to GitHub Pages
+        working-directory: repo-page
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          cd repo-page
-          git checkout --orphan gh-pages-new
+          # 新しいGitリポジトリとして初期化
+          git init
+          git checkout -b gh-pages
           git add .
+          
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
           fi
           
           git commit -m "Update repo ${{ needs.init.outputs.version }}"
-          git push --force origin HEAD:gh-pages
+          
+          # ${{ github.repository }} を使って認証トークン付きでプッシュ
+          git push --force https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages
