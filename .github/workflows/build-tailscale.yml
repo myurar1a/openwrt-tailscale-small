@@ -396,27 +396,36 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Checkout gh-pages
-        uses: actions/checkout@v6
-        with:
-          ref: gh-pages
-          path: repo-page
-        continue-on-error: true
-
-      - name: Initialize Repo Directory
-        run: |
-          if [ ! -d "repo-page" ]; then
-            mkdir repo-page
-            cd repo-page
-            git init
-            git checkout -b gh-pages
-            cd ..
-          fi
-
       - name: Download Artifacts
         uses: actions/download-artifact@v8
         with:
           path: artifacts
+          merge-multiple: true
+
+      - name: Place packages into arch directories
+        run: |
+          mkdir -p repo-page
+          cd repo-page
+          
+          # --- ipk/apk: ファイル配置 ---
+          find ../artifacts -type f \( -name "*.ipk" -o -name "*.apk" \) | while read PKG; do
+            echo "Processing $PKG..."
+            BASENAME=$(basename "$PKG")
+            
+            if [[ "$BASENAME" == *.ipk ]]; then
+              # ファイル名からアーキテクチャ名を抽出 (例: tailscale_1.96.3-r1_x86_64.ipk -> x86_64)
+              ARCH=$(echo "$BASENAME" | sed -E 's/^tailscale_[^_]+_(.+)\.ipk$/\1/')
+              mkdir -p "$ARCH"
+              cp "$PKG" "$ARCH"/
+
+            elif [[ "$BASENAME" == *.apk ]]; then
+              # ファイル名からアーキテクチャ名を抽出 (例: tailscale-1.96.3-r1_x86_64.apk > x86_64)
+              ARCH=$(echo "$BASENAME" | sed -E 's/^tailscale-[^_]+_(.+)\.apk$/\1/')
+              # 配置時ファイル名
+              NEW_NAME=$(echo "$BASENAME" | sed "s/_${ARCH}//")
+              mkdir -p "$ARCH"
+              cp "$PKG" "$ARCH/$NEW_NAME"
+            fi
 
       - name: Generate Index and Sign
         env:
@@ -424,39 +433,16 @@ jobs:
           APK_KEY: ${{ secrets.APK_PRIVATE_KEY }}
         run: |
           cd repo-page
-
-          # clean
-          for ARCH_DIR in */; do
-            [ -d "$ARCH_DIR" ] && rm -f "$ARCH_DIR"*
-          done
-
-          echo "$USIGN_KEY" > usign_key.sec
-          echo "$APK_KEY" > myurar1a-repo.rsa
-
-          # ipk 配置
-          find ../artifacts -type f \( -name "*.ipk" \) | while read PKG; do
-            echo "Processing $PKG..."
-            # ファイル名からアーキテクチャ名を抽出 (例: tailscale_1.96.3-r1_x86_64.ipk -> x86_64)
-            ARCH_NAME=$(basename "$PKG" | sed -E 's/^tailscale_[^_]+_([^\.]+)\.ipk$/\1/')
-            mkdir -p "$ARCH_NAME"
-            cp "$PKG" "$ARCH_NAME"/
-          done
-
-          # apk 配置
-          find ../artifacts -type f \( -name "*.apk" \) | while read PKG; do
-            echo "Processing $PKG..."
-            # ファイル名からアーキテクチャ名を抽出 (例: tailscale-1.96.3-r1_x86_64.apk > x86_64)
-            ARCH_NAME=$(basename "$PKG" | sed -E 's/^tailscale-[^_]+_([^\.]+)\.apk$/\1/')
-            # 配置時ファイル名
-            NEW_NAME=$(basename "$PKG" | sed "s/_${ARCH_NAME}//")
-            cp "$PKG" "$ARCH_NAME"/"$NEW_NAME"
-          done
           
-          # --- ipk のインデックス生成と署名 (OpenWrt rootfsコンテナを使用) ---
+          echo "$USIGN_KEY" > usign_key.sec
+          echo "$APK_KEY"   > myurar1a-repo.rsa
+          trap 'rm -f "$GITHUB_WORKSPACE/repo-page/usign_key.sec" "$GITHUB_WORKSPACE/repo-page/myurar1a-repo.rsa" "$GITHUB_WORKSPACE/repo-page/myurar1a-repo.rsa.pub"' EXIT
+          
+          # --- ipk: インデックス生成と署名 (OpenWrt rootfsコンテナを使用) ---
           for ARCH_DIR in */; do
             if [ -d "$ARCH_DIR" ] && ls "$ARCH_DIR"/*.ipk >/dev/null 2>&1; then
               cd "$ARCH_DIR"
-
+              
               # Generate index
               echo "Generating IPK index for $ARCH_DIR..."
               echo "" > Packages
@@ -468,7 +454,7 @@ jobs:
                 echo "" >> Packages
               done
               gzip -k -f Packages
-
+              
               # Sign ipk
               echo "Signing Packages (IPK)..."
               docker run --rm -v "$GITHUB_WORKSPACE/repo-page":/work -w "/work/$ARCH_DIR" openwrt/rootfs:x86-64-24.10.5 \
@@ -478,13 +464,13 @@ jobs:
             fi
           done
           
-          # --- apk のインデックス生成 ---
+          # --- apk: インデックス生成 ---
           docker run --rm \
             -v "$GITHUB_WORKSPACE/repo-page":/work \
             -v "$GITHUB_WORKSPACE/cert":/cert:ro \
             -w /work \
             alpine:latest sh -c "
-
+            
             # Install abuild
             apk add --no-cache abuild
             
@@ -492,7 +478,7 @@ jobs:
             mkdir -p /etc/apk/keys
             cp /cert/apk_key.rsa.pub /etc/apk/keys/myurar1a-repo.rsa.pub
             cp /cert/apk_key.rsa.pub /work/myurar1a-repo.rsa.pub
-
+            
             for ARCH_DIR in */ ; do
               if [ -d \"\$ARCH_DIR\" ] && [ \"\$ARCH_DIR\" != \"cert/\" ] && ls \"\$ARCH_DIR\"/*.apk >/dev/null 2>&1; then
                 cd \"\$ARCH_DIR\"
@@ -515,19 +501,19 @@ jobs:
               fi
             fi
           done
-          
-          rm -f usign_key.sec myurar1a-repo.rsa myurar1a-repo.rsa.pub
 
       - name: Deploy to GitHub Pages
-        working-directory: repo-page
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          cd repo-page
+          git checkout --orphan gh-pages-new
           git add .
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
           
-          # 変更がない場合のエラー回避
-          git commit -m "Update repo ${{ needs.init.outputs.version }}" || echo "No changes to commit"
-          
-          # 強制プッシュで履歴を上書きしないとリポジトリが肥大化するため注意
-          # 容量節約なら --force 推奨
+          git commit -m "Update repo ${{ needs.init.outputs.version }}"
           git push --force origin HEAD:gh-pages
