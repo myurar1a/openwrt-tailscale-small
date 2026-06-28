@@ -57,7 +57,7 @@ jobs:
           
           echo "Tags defined: $ALL_TAGS"
           echo "tags=$ALL_TAGS" >> $GITHUB_OUTPUT
-          
+
       - name: Check version
         id: check
         run: |
@@ -66,15 +66,21 @@ jobs:
           SKIP_CHECK="${{ inputs.skip_check }}"
           
           # 公式の最新タグを取得
-          LATEST_TAG=$(curl -s https://api.github.com/repos/tailscale/tailscale/releases/latest | jq -r .tag_name)
+          LATEST_TAG=$(curl -sf https://api.github.com/repos/tailscale/tailscale/releases/latest | jq -r .tag_name)
+          if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
+            echo "::error::Failed to fetch upstream latest release."
+            exit 1
+          fi
           
-          # 自分のリポジトリの最新リリースを取得
-          MY_LATEST=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r .tag_name || echo "v0.0.0")
-
+          MY_LATEST=$(curl -sf https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r .tag_name || echo "v0.0.0")
+          if [ "$MY_LATEST" = "null" ]; then
+            MY_LATEST="v0.0.0"
+          fi
+          
           echo "Upstream: $LATEST_TAG"
           echo "Current: $MY_LATEST"
           echo "Input: $INPUT_VER"
-
+          
           if [ -n "$INPUT_VER" ]; then
             echo "Manual version specified."
             echo "should_run=true" >> $GITHUB_OUTPUT
@@ -102,44 +108,44 @@ jobs:
           # --- x86 ---
           - goarch: 386
             openwrt_archs: "i386_pentium-mmx i386_pentium4"
-
+          
           # --- ARM64 (Raspberry Pi 4, NanoPi, etc.) ---
           - goarch: arm64
             openwrt_archs: "aarch64_cortex-a53 aarch64_cortex-a72 aarch64_cortex-a76 aarch64_generic"
-
+          
           # --- ARMv7 (Raspberry Pi 2/3, etc.) ---
           - goarch: arm
             goarm: 7
             openwrt_archs: "arm_cortex-a5_vfpv4 arm_cortex-a7 arm_cortex-a7_neon-vfpv4 arm_cortex-a7_vfpv4 arm_cortex-a8_vfpv3 arm_cortex-a9 arm_cortex-a9_neon arm_cortex-a9_vfpv3-d16 arm_cortex-a15_neon-vfpv4"
-
+          
           # --- ARMv6 (Raspberry Pi 1 / Zero) ---
           - goarch: arm
             goarm: 6
             openwrt_archs: "arm_arm1176jzf-s_vfp"
-
+          
           # --- ARMv5 ---
           - goarch: arm
             goarm: 5
             openwrt_archs: "arm_arm926ej-s arm_xscale"
-
+          
           # --- MIPS Big Endian (Atheros AR7xxx/AR9xxx, QCA9xxx) ---
           - goarch: mips
             gomips: softfloat
             openwrt_archs: "mips_24kc mips_4kec mips_mips32"
-
+          
           # --- MIPS Little Endian (MediaTek MT76x8, Omega2, etc.) ---
           - goarch: mipsle
             gomips: softfloat
             openwrt_archs: "mipsel_24kc mipsel_24kc_24kf mipsel_74kc mipsel_mips32"
-
+          
           # --- RISC-V ---
           - goarch: riscv64
             openwrt_archs: "riscv64_riscv64"
-
+          
           # --- PowerPC64 ---
           - goarch: ppc64
             openwrt_archs: "powerpc64_e5500"
-
+          
           # --- x86_64 ---
           - goarch: amd64
             openwrt_archs: "x86_64"
@@ -179,7 +185,8 @@ jobs:
         run: |
           # --extra-small オプション処理内の featuretags 実行引数に各タグを追加
           sed -i "s/--add=osrouter/--add=${ALL_TAGS}/" build_dist.sh
-
+          grep -q "${ALL_TAGS}" build_dist.sh || { echo "::error::Failed to patch build_dist.sh. '--add=osrouter' not found."; exit 1; }
+          
           chmod +x ./build_dist.sh
           echo "Building tailscale.combined for $GOARCH using build_dist.sh..."
           ./build_dist.sh --extra-small --box -o ../tailscale.combined ./cmd/tailscaled
@@ -217,7 +224,7 @@ jobs:
             ln -s tailscale.combined tailscale
             ln -s tailscale.combined tailscaled
             cd ../../../..
-
+            
             cp my-repo/openwrt/data/tailscale.config ipk_build/data/etc/config/tailscale
             cp my-repo/openwrt/data/tailscale.init ipk_build/data/etc/init.d/tailscale
             cp my-repo/openwrt/data/tailscale.keep ipk_build/data/lib/upgrade/keep.d/tailscale
@@ -236,7 +243,7 @@ jobs:
             cp my-repo/openwrt/control/postinst ipk_build/control/postinst
             cp my-repo/openwrt/control/prerm ipk_build/control/prerm
             chmod 755 ipk_build/control/postinst ipk_build/control/prerm
-
+            
             sed -i "s/VERSION_PLACEHOLDER/$VERSION_NUM/g" ipk_build/control/control
             sed -i "s/ARCH_PLACEHOLDER/$ARCH/g" ipk_build/control/control
             
@@ -258,7 +265,7 @@ jobs:
             # .ipk を artifacts ディレクトリへ退避
             mv "$IPK_NAME" ../artifacts/
             cd ..
-
+            
             # --- .apk ---
             echo "Building APK for $ARCH..."
             
@@ -276,7 +283,7 @@ jobs:
                   'apk add --no-cache abuild >/dev/null 2>&1 && abuild-tar --hash' \
               | gzip -n -9 > ../../apk_build/data.tar.gz
             cd ../..
-
+            
             # 2. make apk metadata (.PKGINFO)
             # フィールド形式は "key = value"（スペース必須）
             # datahash は data.tar.gz 生成後に計算して末尾に追記
@@ -292,7 +299,7 @@ jobs:
               echo "arch = $ARCH"
               echo "datahash = $(sha256sum apk_build/data.tar.gz | awk '{print $1}')"
             } > apk_build/control/.PKGINFO
-
+            
             # 3. copy install scripts
             cp my-repo/openwrt/control/.post-install apk_build/control/.post-install
             cp my-repo/openwrt/control/.post-upgrade apk_build/control/.post-upgrade
@@ -318,7 +325,7 @@ jobs:
             echo "$APK_KEY" > myurar1a-repo.rsa
             SIGN_FILE=".SIGN.RSA.myurar1a-repo.rsa.pub"
             openssl dgst -sha1 -sign myurar1a-repo.rsa -out apk_build/${SIGN_FILE} apk_build/control.tar.gz
-
+            
             # 6. build sign.tar.gz
             # abuild-sign の実装どおり apk_tar | abuild-tar --cut | gzip を再現
             cd apk_build
@@ -334,7 +341,7 @@ jobs:
             # --- .apk packaging (signed) ---
             APK_NAME="tailscale-${VERSION_NUM}-r1_${ARCH}.apk"
             cat sign.tar.gz control.tar.gz data.tar.gz > "$APK_NAME"
-
+            
             # .apk を artifacts ディレクトリへ退避し、一時ファイルを削除
             rm -f ../myurar1a-repo.rsa ${SIGN_FILE} sign.tar.gz
             mv "$APK_NAME" ../artifacts/
@@ -470,7 +477,7 @@ jobs:
               cd ..
             fi
           done
-
+          
           # --- apk のインデックス生成 ---
           docker run --rm \
             -v "$GITHUB_WORKSPACE/repo-page":/work \
@@ -498,7 +505,7 @@ jobs:
               fi
             done
           "
-
+          
           # 不要な空ディレクトリがあれば削除
           for ARCH_DIR in */; do
             if [ -d "$ARCH_DIR" ]; then
@@ -517,10 +524,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-
+          
           # 変更がない場合のエラー回避
           git commit -m "Update repo ${{ needs.init.outputs.version }}" || echo "No changes to commit"
-
+          
           # 強制プッシュで履歴を上書きしないとリポジトリが肥大化するため注意
           # 容量節約なら --force 推奨
           git push --force origin HEAD:gh-pages
