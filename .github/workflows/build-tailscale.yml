@@ -395,6 +395,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          path: my-repo
 
       - name: Download Artifacts
         uses: actions/download-artifact@v8
@@ -408,23 +410,28 @@ jobs:
           cd repo-page
           
           # --- ipk/apk: ファイル配置 ---
-          find ../artifacts -type f \( -name "*.ipk" -o -name "*.apk" \) | while read PKG; do
+          find ../artifacts -type f \( -name "*.ipk" -o -name "*.apk" \) | while read -r PKG; do
             echo "Processing $PKG..."
             BASENAME=$(basename "$PKG")
             
-            if [ "$BASENAME" == *.ipk ]; then
-              # ファイル名からアーキテクチャ名を抽出 (例: tailscale_1.96.3-r1_x86_64.ipk -> x86_64)
-              ARCH=$(echo "$BASENAME" | sed -E 's/^tailscale_[^_]+_(.+)\.ipk$/\1/')
-              mkdir -p "$ARCH"
-              cp "$PKG" "$ARCH"/
-            elif [ "$BASENAME" == *.apk ]; then
-              # ファイル名からアーキテクチャ名を抽出 (例: tailscale-1.96.3-r1_x86_64.apk > x86_64)
-              ARCH=$(echo "$BASENAME" | sed -E 's/^tailscale-[^_]+_(.+)\.apk$/\1/')
-              # 配置時ファイル名
-              NEW_NAME=$(echo "$BASENAME" | sed "s/_${ARCH}//")
-              mkdir -p "$ARCH"
-              cp "$PKG" "$ARCH/$NEW_NAME"
-            fi
+            case "$BASENAME" in
+              *.ipk)
+                # ファイル名からアーキテクチャ名を抽出 (例: tailscale_1.96.3-r1_x86_64.ipk -> x86_64)
+                ARCH=$(echo "$BASENAME" | sed -E 's/^tailscale_[^_]+_(.+)\.ipk$/\1/')
+                mkdir -p "$ARCH"
+                cp "$PKG" "$ARCH"/
+                ;;
+              *.apk)
+                # ファイル名からアーキテクチャ名を抽出 (例: tailscale-1.96.3-r1_x86_64.apk > x86_64)
+                ARCH=$(echo "$BASENAME" | sed -E 's/^tailscale-[^_]+_(.+)\.apk$/\1/')
+                NEW_NAME=$(echo "$BASENAME" | sed "s/_${ARCH}//")
+                mkdir -p "$ARCH"
+                cp "$PKG" "$ARCH/$NEW_NAME"
+                ;;
+              *)
+                echo "::warning::Unknown package type: $BASENAME"
+                ;;
+            esac
           done
 
       - name: Generate Index and Sign
@@ -467,7 +474,7 @@ jobs:
           # --- apk: インデックス生成 ---
           docker run --rm \
             -v "$GITHUB_WORKSPACE/repo-page":/work \
-            -v "$GITHUB_WORKSPACE/cert":/cert:ro \
+            -v "$GITHUB_WORKSPACE/my-repo/cert":/cert:ro \
             -w /work \
             alpine:latest sh -c "
             
